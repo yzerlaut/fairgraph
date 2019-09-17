@@ -126,7 +126,23 @@ class Method(MINDSObject):
     type = ["minds:ExperimentMethod"]
     property_names = ["name", "associated_with"]
 
+    
+class Protocol(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/protocol/v1.0.0"
+    #type = ["https://schema.hbp.eu/protocol"]
+    type = ["minds:protocol"]
+    property_names = ["name", "associated_with"]
 
+    
+class Preparation(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/preparation/v1.0.0"
+    #type = ["https://schema.hbp.eu/preparation"]
+    type = ["minds:preparation"]
+    property_names = ["name", "associated_with"]
+
+    
 class SpecimenGroup(MINDSObject):
     """docstring"""
     _path = "/core/specimengroup/v1.0.0"
@@ -254,3 +270,13 @@ obj_types = {
     "species": Species,
     "parcellationRegion": ParcellationRegion
 }
+
+if __name__=='__main__':
+    import os
+    from fairgraph.client import KGClient
+    token = os.environ["HBP_token"]
+    nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
+    client = KGClient(token, nexus_endpoint=nexus_endpoint)
+    from fairgraph.minds import Protocol, ParcellationRegion, Preparation
+    print(Preparation.list(client, size=10))
+    
