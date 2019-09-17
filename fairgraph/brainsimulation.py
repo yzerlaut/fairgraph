@@ -19,9 +19,7 @@ from .core import Organization, Person, Age
 logger = logging.getLogger("fairgraph")
 mimetypes.init()
 
-#NAMESPACE = "neuralactivity"
-NAMESPACE = "modelvalidation"
-#NAMESPACE = "brainsimulation"
+DEFAULT_NAMESPACE = "modelvalidation"
 
 ATTACHMENT_SIZE_LIMIT = 1024 * 1024  # 1 MB
 
@@ -43,8 +41,9 @@ class HasAliasMixin(object):
 
 class ModelProject(KGObject, HasAliasMixin):
     """docstring"""
-    path = NAMESPACE + "/simulation/modelproject/v0.1.0"
-    #path = NAMESPACE + "/simulation/modelproject/v0.1.1"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/modelproject/v0.1.0"
+    #path = DEFAULT_NAMESPACE + "/simulation/modelproject/v0.1.1"
     type = ["prov:Entity", "nsg:ModelProject"]
 
     context = {
@@ -257,6 +256,25 @@ class ModelProject(KGObject, HasAliasMixin):
             data["images"] = self.images
         return data
 
+    @property
+    def _existence_query(self):
+        # allow multiple projects with the same name
+        return {
+            "op": "and",
+            "value": [
+                {
+                    "path": "schema:name",
+                    "op": "eq",
+                    "value": self.name
+                },
+                {
+                    "path": "schema:dateCreated",
+                    "op": "eq",
+                    "value": self.date_created.isoformat()
+                }
+            ]
+        }
+
     @classmethod
     def list(cls, client, size=10000, **filters):
         """List all objects of this type in the Knowledge Graph"""
@@ -294,8 +312,9 @@ class ModelProject(KGObject, HasAliasMixin):
 
 class ModelInstance(KGObject):
     """docstring"""
-    #path = NAMESPACE + "/simulation/modelinstance/v0.1.2"
-    path = NAMESPACE + "/simulation/modelinstance/v0.1.1"
+    #path = DEFAULT_NAMESPACE + "/simulation/modelinstance/v0.1.2"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/modelinstance/v0.1.1"
     type = ["prov:Entity", "nsg:ModelInstance"]
     # ScientificModelInstance
     #   - model -> linked ModelProject using partOf
@@ -412,7 +431,8 @@ class ModelInstance(KGObject):
 
 class MEModel(ModelInstance):
     """docstring"""
-    path = NAMESPACE + "/simulation/memodel/v0.1.2"  # latest is 0.1.4, but all the data is currently under 0.1.2
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/memodel/v0.1.2"  # latest is 0.1.4, but all the data is currently under 0.1.2
     type = ["prov:Entity", "nsg:MEModel", "nsg:ModelInstance"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -518,7 +538,8 @@ class MEModel(ModelInstance):
 
 
 class Morphology(KGObject):
-    path = NAMESPACE + "/simulation/morphology/v0.1.1"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/morphology/v0.1.1"
     type = ["prov:Entity", "nsg:Morphology"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -529,6 +550,8 @@ class Morphology(KGObject):
     def __init__(self, name, cell_type=None, morphology_file=None, distribution=None, id=None, instance=None):
         self.name = name
         self.cell_type = cell_type
+        if cell_type is not None and not isinstance(cell_type, CellType):
+            raise ValueError("cell type should be a CellType instance, not {}".format(type(cell_type)))
         self.distribution = distribution
         if morphology_file:
             if distribution:
@@ -541,6 +564,8 @@ class Morphology(KGObject):
     def morphology_file(self):
         if isinstance(self.distribution, list):
             return [d.location for d in self.distribution]
+        elif self.distribution is None:
+            return None
         else:
             return self.distribution.location
 
@@ -557,7 +582,7 @@ class Morphology(KGObject):
         D = instance.data
         assert 'nsg:Morphology' in D["@type"]
         obj = cls(name=D["name"],
-                  cell_type=D.get("modelOf", None),
+                  cell_type=build_kg_object(CellType, D.get("modelOf")),
                   distribution=build_kg_object(Distribution, D.get("distribution")),
                   id=D["@id"], instance=instance)
         return obj
@@ -576,7 +601,8 @@ class Morphology(KGObject):
 
 
 class ModelScript(KGObject):
-    path = NAMESPACE + "/simulation/emodelscript/v0.1.0"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/emodelscript/v0.1.0"
     type = ["prov:Entity", "nsg:EModelScript"]  # generalize to other sub-types of script
     context =  [  # todo: root should be set by client to nexus or nexus-int or whatever as required
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -634,7 +660,8 @@ class ModelScript(KGObject):
 
 
 class EModel(ModelInstance):
-    path = NAMESPACE + "/simulation/emodel/v0.1.1"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/emodel/v0.1.1"
     type = ["prov:Entity", "nsg:EModel"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -660,11 +687,11 @@ class EModel(ModelInstance):
         D = instance.data
         assert 'nsg:EModel' in D["@type"]
         obj = cls(name=D["name"],
-                  model_of=build_kg_object(D.get("modelOf", None)),
+                  model_of=build_kg_object(None, D.get("modelOf", None)),
                   #model_of=D.get("modelOf", None),
                   brain_region=build_kg_object(BrainRegion, D.get("brainRegion")),
                   species=build_kg_object(Species, D.get("species")),
-                  main_script=build_kg_object(ModelScript, D["modelScript"]),
+                  main_script=build_kg_object(ModelScript, D.get("modelScript")),
                   release=D.get("release"),  # to fix once we define MEModelRelease class
                   id=D["@id"], instance=instance)
         return obj
@@ -694,7 +721,8 @@ class EModel(ModelInstance):
 
 
 class AnalysisResult(KGObject):
-    path = NAMESPACE + "/simulation/analysisresult/v1.0.0"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/analysisresult/v1.0.0"
     type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisResult"]
     context =  [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -802,8 +830,9 @@ class AnalysisResult(KGObject):
 
 class ValidationTestDefinition(KGObject, HasAliasMixin):
     """docstring"""
-    path = NAMESPACE + "/simulation/validationtestdefinition/v0.1.0"
-    #path = NAMESPACE + "/simulation/validationtestdefinition/v0.1.2"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/validationtestdefinition/v0.1.0"
+    #path = DEFAULT_NAMESPACE + "/simulation/validationtestdefinition/v0.1.2"
     type = ["prov:Entity", "nsg:ValidationTestDefinition"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -954,7 +983,8 @@ class ValidationTestDefinition(KGObject, HasAliasMixin):
 
 class ValidationScript(KGObject):  # or ValidationImplementation
     """docstring"""
-    path = NAMESPACE + "/simulation/validationscript/v0.1.0"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/validationscript/v0.1.0"
     type = ["prov:Entity", "nsg:ModelValidationScript"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -1043,8 +1073,9 @@ class ValidationScript(KGObject):  # or ValidationImplementation
 
 class ValidationResult(KGObject):
     """docstring"""
-    path = NAMESPACE + "/simulation/validationresult/v0.1.0"
-    #path = NAMESPACE + "/simulation/validationresult/v0.1.1"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/validationresult/v0.1.0"
+    #path = DEFAULT_NAMESPACE + "/simulation/validationresult/v0.1.1"
     type = ["prov:Entity", "nsg:ValidationResult"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -1102,6 +1133,7 @@ class ValidationResult(KGObject):
                   passed=D.get("passedValidation"),
                   additional_data=build_kg_object(None, D.get("hadMember")),
                   old_uuid=D.get("oldUUID"),
+                  collab_id=D.get("collabID"),
                   id=D["@id"], instance=instance)
         return obj
 
@@ -1132,12 +1164,15 @@ class ValidationResult(KGObject):
             } for obj in as_list(self.additional_data)]
         if self.old_uuid:
             data["oldUUID"] = self.old_uuid
+        if self.collab_id:
+            data["collabID"] = self.collab_id
         return data
 
 
 class ValidationActivity(KGObject):
     """docstring"""
-    path = NAMESPACE + "/simulation/modelvalidation/v0.2.0"
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/modelvalidation/v0.2.0"
     type = ["prov:Activity", "nsg:ModelValidation"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -1223,3 +1258,15 @@ class ValidationActivity(KGObject):
                 "@id": self.result.id
             }
         return data
+
+
+def list_kg_classes():
+    """List all KG classes defined in this module"""
+    return [obj for name, obj in inspect.getmembers(sys.modules[__name__])
+            if inspect.isclass(obj) and issubclass(obj, KGObject) and obj.__module__ == __name__]
+
+
+def use_namespace(namespace):
+    """Set the namespace for all classes in this module."""
+    for cls in list_kg_classes():
+        cls.namespace = namespace

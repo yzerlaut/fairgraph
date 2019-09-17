@@ -70,6 +70,12 @@ class Registry(type):
         register_class(cls)
         return cls
 
+    @property
+    def path(cls):
+        if cls.namespace is None:
+            raise ValueError("namespace not set")
+        return cls.namespace + cls._path
+
 
 #class KGObject(object, metaclass=Registry):
 class KGObject(with_metaclass(Registry, object)):
@@ -96,11 +102,11 @@ class KGObject(with_metaclass(Registry, object)):
 
     @classmethod
     def from_uri(cls, uri, client, use_cache=True, deprecated=False):
-        return cls.from_kg_instance(client.instance_from_full_uri(uri,
-                                                                  use_cache=use_cache,
-                                                                  deprecated=deprecated),
-                                    client,
-                                    use_cache=use_cache)
+        instance = client.instance_from_full_uri(uri, use_cache=use_cache, deprecated=deprecated)
+        if instance is None:
+            return None
+        else:
+            return cls.from_kg_instance(instance, client, use_cache=use_cache)
 
     @classmethod
     def from_uuid(cls, uuid, client, deprecated=False):
@@ -159,7 +165,7 @@ class KGObject(with_metaclass(Registry, object)):
                 self.id = self.save_cache[self.__class__][query_cache_key]
                 return True
             else:
-                response = client.filter_query(self.path, query_filter, context)
+                response = client.filter_query(self.__class__.path, query_filter, context)
                 if response:
                     self.id = response[0].data["@id"]
                     KGObject.save_cache[self.__class__][query_cache_key] = self.id
@@ -344,6 +350,12 @@ class KGProxy(object):
         return ('{self.__class__.__name__}('
                 '{self.cls!r}, {self.id!r})'.format(self=self))
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.cls == other.cls and self.id == other.id
+
+    def __ne__(self, other):
+        return not isinstance(other, self.__class__) or self.cls != other.cls or self.id != other.id
+
     @property
     def uuid(self):
         return self.id.split("/")[-1]
@@ -351,7 +363,8 @@ class KGProxy(object):
     def delete(self, client):
         """Delete the instance which this proxy represents"""
         obj = self.resolve(client)
-        obj.delete(client)
+        if obj:
+            obj.delete(client)
 
 
 class KGQuery(object):
@@ -437,7 +450,7 @@ class Distribution(object):
             data["digest"]= {
                 "algorithm": self.digest_method,  # e.g. "SHA-256"
                 "value": self.digest
-            },
+            }
         if self.content_type:
             data["mediaType"] = self.content_type
         if self.original_file_name:  # not sure if this is part of the schema, or just an annotation
