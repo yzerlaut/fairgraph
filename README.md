@@ -56,7 +56,7 @@ client = KGClient(token)
 ## Retrieving metadata from the Knowledge Graph
 
 The different metadata/data types available in the Knowledge Graph are grouped into modules,
-currently `commons`, `core`, `brainsimulation`, `electrophysiology` and `minds`.
+currently `commons`, `core`, `brainsimulation`, `electrophysiology` and `uniminds` (previously `minds`).
 For example:
 
 ```

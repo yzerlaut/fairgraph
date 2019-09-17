@@ -1,6 +1,8 @@
 
-
-from .minds import MINDSObject
+try:
+    from .minds import MINDSObject
+except ModuleNotFoundError:
+    from minds import MINDSObject
 
 DEFAULT_NAMESPACE = "uniminds"
 
@@ -65,6 +67,47 @@ class Person(MINDSObject):
         }
 
 
+class Method(MINDSObject):
+    """docstring"""
+    namespace = DEFAULT_NAMESPACE
+    _path = "/core/method/v1.0.0"
+    type = ["uniminds:Method"]
+    # property_names = ["brainStructure",
+    #                   "experimentalPreparation",
+    #                   "publication",
+    #                   "studyTarget",
+    #                   "methodCategory",
+    #                   "subMethod",
+    #                   "name",
+    #                   "identifier"]
+    property_names = ["name", "identifier"]
+
+class Species(MINDSObject):
+    """docstring"""
+    namespace = DEFAULT_NAMESPACE
+    _path = "/options/species/v1.0.0"
+    type = ["uniminds:Species"]
+    property_names = ["name", "identifier"]
+    
+    @property
+    def full_name(self):
+        return self.name
+
+    @property
+    def _existence_query(self):
+        return {
+            "op": "in",
+            "value": [
+                {
+                    "path": "schema:name",
+                    "op": "eq",
+                    "value": self.name
+                }
+            ]
+        }
+    
+
+
 class UniMINDSOption():
     pass
 
@@ -97,3 +140,15 @@ class UniMINDSOption():
 # Study target source
 # Study target type
 # Tissue sample piece
+
+if __name__=='__main__':
+    import os
+    import numpy as np
+    from fairgraph.client import KGClient
+    token = os.environ["HBP_token"]
+    nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
+    client = KGClient(token, nexus_endpoint=nexus_endpoint)
+    from fairgraph.uniminds import Person, Method, Species
+    ls = Species.list(client, size=100000)
+    name_list = [llss.name for llss in ls]
+    print(np.unique(name_list))
