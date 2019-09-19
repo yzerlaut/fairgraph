@@ -8,6 +8,7 @@ from fairgraph.data import FileAssociation, CSCSFile
 
 class MINDSObject(KGObject):
     """docstring"""
+    namespace = "minds"
     context = [
         "{{base}}/contexts/nexus/core/resource/v0.3.0",
         {
@@ -100,7 +101,7 @@ class MINDSObject(KGObject):
 
 class Dataset(MINDSObject):
     """docstring"""
-    path = "minds/core/dataset/v1.0.0"
+    _path = "/core/dataset/v1.0.0"
     #type = ["https://schema.hbp.eu/Dataset"]
     type = ["minds:Dataset"]
     property_names = ["activity", "component", "contributors", "created_at", "datalink",
@@ -111,7 +112,7 @@ class Dataset(MINDSObject):
 
 class Activity(MINDSObject):
     """docstring"""
-    path = "minds/core/dataset/v1.0.0"
+    _path = "/core/dataset/v1.0.0"
     #type = ["https://schema.hbp.eu/Activity"]
     type = ["minds:Activity"]
     property_names = ["created_at", "ethics", "methods", "preparation", "protocols",
@@ -120,15 +121,31 @@ class Activity(MINDSObject):
 
 class Method(MINDSObject):
     """docstring"""
-    path = "minds/experiment/method/v1.0.0"
+    _path = "/experiment/method/v1.0.0"
     #type = ["https://schema.hbp.eu/ExperimentMethod"]
     type = ["minds:ExperimentMethod"]
     property_names = ["name", "associated_with"]
 
+    
+class Protocol(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/protocol/v1.0.0"
+    #type = ["https://schema.hbp.eu/protocol"]
+    type = ["minds:protocol"]
+    property_names = ["name", "associated_with"]
 
+    
+class Preparation(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/preparation/v1.0.0"
+    #type = ["https://schema.hbp.eu/preparation"]
+    type = ["minds:preparation"]
+    property_names = ["name", "associated_with"]
+
+    
 class SpecimenGroup(MINDSObject):
     """docstring"""
-    path = "minds/core/specimengroup/v1.0.0"
+    _path = "/core/specimengroup/v1.0.0"
     type = ["minds:SpecimenGroup"]
     property_names = ["created_at", "subjects", "name", "associated_with"]
 
@@ -137,7 +154,7 @@ class MINDSSubject(MINDSObject):
     """docstring"""
     # name qualified to avoid clash with nsg:Subject
     # pending addition of namespaces to registry
-    path = "minds/experiment/subject/v1.0.0"
+    _path = "/experiment/subject/v1.0.0"
     #type = ["https://schema.hbp.eu/ExperimentSubject"]
     type = ["minds:ExperimentSubject"]
     property_names = ["age", "age_category", "causeOfDeath", "samples", "sex", "species",
@@ -153,7 +170,7 @@ class License(MINDSObject):
 
 class EmbargoStatus(MINDSObject):
     """docstring"""
-    path = "minds/core/embargostatus/v1.0.0"
+    _path = "/core/embargostatus/v1.0.0"
     #type = ["https://schema.hbp.eu/EmbargoStatus"]
     type = ["minds:EmbargoStatus"]
     property_names = ["name", "associated_with"]
@@ -161,7 +178,7 @@ class EmbargoStatus(MINDSObject):
 
 class Sample(MINDSObject):
     """docstring"""
-    path = "minds/experiment/sample/v1.0.0"
+    _path = "/experiment/sample/v1.0.0"
     #type = ["https://schema.hbp.eu/ExperimentSample"]
     type = ["minds:ExperimentSample"]
     property_names = ["name", "methods", "parcellationAtlas", "parcellationRegion",
@@ -183,14 +200,14 @@ class Sample(MINDSObject):
 
 class Person(MINDSObject):
     """docstring"""
-    path = "minds/core/person/v1.0.0"
+    _path = "/core/person/v1.0.0"
     type = ["minds:Person"]
     property_names = ["name"]
 
 
 class PLAComponent(MINDSObject):
     """docstring"""
-    path = "minds/core/placomponent/v1.0.0"
+    _path = "/core/placomponent/v1.0.0"
     type = ["minds:PLAComponent"]
     property_names = ["name", "description"]
 
@@ -208,25 +225,25 @@ class PLAComponent(MINDSObject):
 
 
 class AgeCategory(MINDSObject):
-    path = "minds/core/agecategory/v1.0.0"
+    _path = "/core/agecategory/v1.0.0"
     type = ["minds:Agecategory"]
     property_names = ["name"]
 
 
 class Sex(MINDSObject):
-    path = "minds/core/sex/v1.0.0"
+    _path = "/core/sex/v1.0.0"
     type = ["minds:Sex"]
     property_names = ["name"]
 
 
 class Species(MINDSObject):
-    path = "minds/core/species/v1.0.0"
+    _path = "/core/species/v1.0.0"
     type = ["minds:Species"]
     property_names = ["name"]
 
 
 class ParcellationRegion(MINDSObject):
-    path = "minds/core/parcellationregion/v1.0.0"
+    _path = "/core/parcellationregion/v1.0.0"
     type = ["minds:Parcellationregion"]
     property_names = ["name"]
 
@@ -253,3 +270,13 @@ obj_types = {
     "species": Species,
     "parcellationRegion": ParcellationRegion
 }
+
+if __name__=='__main__':
+    import os
+    from fairgraph.client import KGClient
+    token = os.environ["HBP_token"]
+    nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
+    client = KGClient(token, nexus_endpoint=nexus_endpoint)
+    from fairgraph.minds import Protocol, ParcellationRegion, Preparation
+    print(Preparation.list(client, size=10))
+    

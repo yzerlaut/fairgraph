@@ -5,7 +5,7 @@
 
 import collections
 #from typing import NamedTuple
-from .base import KGObject, KGProxy, OntologyTerm
+from .base import KGObject, KGProxy, OntologyTerm, StructuredMetadata
 
 
 #class Address(NamedTuple):
@@ -13,6 +13,7 @@ from .base import KGObject, KGProxy, OntologyTerm
 #    country: str
 
 Address = collections.namedtuple('Address', ['locality', 'country'])
+# should probably subclass StructuredMetadata
 
 
 class Species(OntologyTerm):
@@ -201,7 +202,7 @@ class License(OntologyTerm):
     }
 
 
-class QuantitativeValue(object):
+class QuantitativeValue(StructuredMetadata):
     """docstring"""
     unit_codes = {
         "days": "http://purl.obolibrary.org/obo/UO_0000033",
@@ -211,6 +212,10 @@ class QuantitativeValue(object):
         "µm": "http://purl.obolibrary.org/obo/UO_0000017",
         "mV":  "http://purl.obolibrary.org/obo/UO_0000247",
         "ms": "http://purl.obolibrary.org/obo/UO_0000028",
+        "MΩ": "https://en.wiktionary.org/wiki/megaohm",
+        "Mohm": "https://en.wiktionary.org/wiki/megaohm",
+        "GΩ": "https://en.wiktionary.org/wiki/gigaohm",
+        "Gohm": "https://en.wiktionary.org/wiki/gigaohm"
     }
 
     def __init__(self, value, unit_text, unit_code=None):
@@ -226,7 +231,15 @@ class QuantitativeValue(object):
         return ('{self.__class__.__name__}('
                 '{self.value!r} {self.unit_text!r})'.format(self=self))
 
-    def to_jsonld(self):
+    def __eq__(self, other):
+        return (self.value == other.value
+                and self.unit_text == other.unit_text
+                and self.unit_code == other.unit_code)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def to_jsonld(self, client=None):
         return {
             "@type": "nsg:QuantitativeValue",  # needs 'nsg:' prefix, no?
             "value": self.value,
@@ -257,10 +270,77 @@ class QuantitativeValue(object):
         return cls(float(data["value"]), unit_text, unit_code)
 
 
-class Age(object):
+class QuantitativeValueRange(StructuredMetadata):
+    """docstring"""
+    unit_codes = {
+        "days": "http://purl.obolibrary.org/obo/UO_0000033",
+        "weeks": "http://purl.obolibrary.org/obo/UO_0000034",
+        "months": "http://purl.obolibrary.org/obo/UO_0000035",
+        "degrees": "http://purl.obolibrary.org/obo/UO_0000185",
+        "µm": "http://purl.obolibrary.org/obo/UO_0000017",
+        "mV":  "http://purl.obolibrary.org/obo/UO_0000247",
+        "ms": "http://purl.obolibrary.org/obo/UO_0000028",
+    }
+
+    def __init__(self, min, max, unit_text, unit_code=None):
+        if not isinstance(min, (int, float)):
+            raise ValueError("'min' must be a number")
+        if not isinstance(max, (int, float)):
+            raise ValueError("'max' must be a number")
+        self.min = min
+        self.max = max
+        self.unit_text = unit_text
+        self.unit_code = unit_code or self.unit_codes[unit_text]
+
+    def __repr__(self):
+        #return (f'{self.__class__.__name__}('
+        #        f'{self.value!r} {self.unit_text!r})')
+        return ('{self.__class__.__name__}('
+                '{self.min!r}-{self.max!r} {self.unit_text!r})'.format(self=self))
+
+    def to_jsonld(self, client=None):
+        return {
+            "@type": "nsg:QuantitativeValue",  # needs 'nsg:' prefix, no?
+            "minValue": self.min,
+            "maxValue": self.max,
+            "label": self.unit_text,
+            "unitCode": {"@id": self.unit_code}
+        }
+
+    def to_jsonld_alt(self):
+        return {
+            "minValue": self.min,
+            "maxValue": self.max,
+            "unitText": self.unit_text
+        }
+
+    @classmethod
+    def from_jsonld(cls, data):
+        if data is None:
+            return None
+        if "label" in data:
+            unit_text = data["label"]
+        elif "unitText" in data:
+            unit_text = data["unitText"]
+        else:
+            unit_text = "?"
+        if "unitCode" in data:
+            unit_code = data["unitCode"]["@id"]
+        else:
+            unit_code = None
+        return cls(float(data["minValue"]), data["maxValue"], unit_text, unit_code)
+
+
+class Age(StructuredMetadata):
+    allowed_periods = [
+        "Pre-natal",
+        "Post-natal"
+      ]
 
     def __init__(self, value, period):
         self.value = value
+        if period not in Age.allowed_periods:
+            raise ValueError("period must be one of {}".format(allowed_periods))
         self.period = period
 
     def __repr__(self):
@@ -269,7 +349,13 @@ class Age(object):
         return ('{self.__class__.__name__}('
                 '{self.value!r}, {self.period!r})'.format(self=self))
 
-    def to_jsonld(self):
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.value == other.value and self.period == other.period
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def to_jsonld(self, client=None):
         return {'value': self.value.to_jsonld(),
                 'period': self.period}
 
