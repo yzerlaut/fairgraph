@@ -277,6 +277,7 @@ if __name__=='__main__':
     token = os.environ["HBP_token"]
     nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
     client = KGClient(token, nexus_endpoint=nexus_endpoint)
-    from fairgraph.minds import Protocol, ParcellationRegion, Preparation
-    print(Preparation.list(client, size=10))
+    from fairgraph.minds import Protocol, ParcellationRegion, Preparation, Person
+    person = Person.list(client, size=10)[0]
+    print(person.exists(client))
     

@@ -1,6 +1,8 @@
 
-
-from .minds import MINDSObject
+try:
+    from .minds import MINDSObject
+except ModuleNotFoundError:
+    from minds import MINDSObject
 
 DEFAULT_NAMESPACE = "uniminds"
 
@@ -97,3 +99,14 @@ class UniMINDSOption():
 # Study target source
 # Study target type
 # Tissue sample piece
+
+if __name__=='__main__':
+    import os
+    from fairgraph.client import KGClient
+    token = os.environ["HBP_token"]
+    nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
+    client = KGClient(token, nexus_endpoint=nexus_endpoint)
+    from fairgraph.uniminds import Person
+    person = Person.list(client, size=10)[0]
+    print(person.exists(client))
+    
