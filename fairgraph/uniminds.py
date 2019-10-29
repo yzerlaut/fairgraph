@@ -671,13 +671,61 @@ class UniMINDSOption():
 
 if __name__=='__main__':
 
-    import os
-    from fairgraph import uniminds, KGClient
-    token = os.environ['HBP_token']
-    client = KGClient(token)
+    import os, hashlib
+    from fairgraph import KGClient
+    from fairgraph.uniminds import ModelInstance, Organization, Person, License, AbstractionLevel, BrainStructure, CellularTarget, ModelFormat, ModelScope
 
-    # person = Person.list(client, size=10)[0]
-    # print(person)
-    person = Person(name='Zerlaut, Yann', family_name='Zerlaut', given_name ='Yann')
-    person.save(client)
+    HBP_token = os.environ["HBP_token"] # pass whatever bash variable stores your 
+    client = KGClient(HBP_token)
+
+    # adding an organization
+    full_name = 'Human Brain Project Research Centre' 
+    person1 = Organization(name=full_name,
+                           identifier = hashlib.sha1(full_name.encode('utf-8')).hexdigest(),
+                           family_name='Dupont', given_name ='Jean') 
     
+    # adding people
+    full_name = 'Dupont, Jean' 
+    JDupont = Person(name=full_name,
+                     identifier = hashlib.sha1(full_name.encode('utf-8')).hexdigest(),
+                     email='jean.dupont@hbp.eu',
+                     family_name='Dupont', given_name ='Jean') 
+    full_name = 'Smith, John'
+    JSmith = Person(name=full_name,
+                     identifier = hashlib.sha1(full_name.encode('utf-8')).hexdigest(),
+                     email='john.smith@hbp.eu',
+                     family_name='Smith', given_name ='John')
+    for person in [JDupont, JSmith]:
+        person.save(client)
+
+    
+    # Release a new Model entry to the Knowledge Graph
+    name, version ='Test by John Smith', 'v1'
+    # -- we first fetch a few existing metadata from the Knowledge graph
+    CCBY40 = License.from_uuid("8462091d-45a0-4e57-a9cc-869a667d8702", client, api='query')
+    Population_Modeling = AbstractionLevel.from_uuid("e527c7f2-2cff-4727-826f-7e3cc1dbdde3", client, api='query')
+    Cerebral_Cortex = BrainStructure.from_uuid("7e397000-243c-4773-9cbe-00167dfc384d", client, api='query')
+    Interneurons = CellularTarget.from_uuid("c601c757-da45-49f7-bd20-8ceec61a16a1", client, api='query')
+    PyNN = ModelFormat.from_uuid("25579512-ade4-4ddf-b039-7d10e275da26", client, api='query')
+    Network = ModelScope.from_uuid("d773866c-e790-45ef-b354-147176b44cdb", client, api='query')
+    # then we write the new ModelInstance using them
+    minst = ModelInstance(name=name,
+                          description='Test of a Model Release using Faigraph by John Smith ',
+                          identifier = hashlib.sha1((name + version).encode('utf-8')).hexdigest(),
+                          custodian=JSmith,
+                          main_contact = JSmith,
+                          author=[JDupont, JSmith],
+                          abstraction_level=Population_Modeling,
+                          brain_structure=Cerebral_Cortex,
+                          cellular_target=Interneurons,
+                          modelformat=PyNN,
+                          modelscope=Network,
+                          license=CCBY40,
+                          version=version)
+    minst.save(client)
+    
+    # # create a FileBundle
+    # fb = FileBundle(name='this is a FileBundle for the model: "Test by yann" of version "v1 ',
+    #                 url='www.theurlofthemodel.eu',
+    #                 model_instance = model)
+    # fb.save(client)
