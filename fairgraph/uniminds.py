@@ -242,16 +242,26 @@ class FileBundle(UnimindsObject):
     _path = "/core/filebundle/v1.0.0"
     type = ["uniminds:Filebundle"]
     fields = (
+      # attributes  
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
+      Field("brain_structure", "uniminds.BrainStructure", "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
       Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("url", basestring, "http://schema.org/url", required=False, multiple=False),
       Field("usage_notes", basestring, "https://schema.hbp.eu/uniminds/usageNotes", required=False, multiple=False),
+      # links
       Field("file", File, "https://schema.hbp.eu/uniminds/file", required=False, multiple=False),
       Field("file_bundle", "uniminds.FileBundle", "https://schema.hbp.eu/uniminds/fileBundle", required=False, multiple=False),
-      Field("mime_type", "uniminds.MimeType", "https://schema.hbp.eu/uniminds/mimeType", required=False, multiple=True))
-
+      Field("main_file_bundle", "uniminds.FileBundle", "https://schema.hbp.eu/uniminds/mainFileBundle", required=False, multiple=True),
+      Field("method", "uniminds.Method", "https://schema.hbp.eu/uniminds/method", required=False, multiple=False),
+      Field("model_instance", "uniminds.ModelInstance", "https://schema.hbp.eu/uniminds/modelinstance", required=False, multiple=False),
+      Field("publication", "uniminds.Publication", "https://schema.hbp.eu/uniminds/publication", required=False, multiple=False),
+      Field("mime_type", "uniminds.MimeType", "https://schema.hbp.eu/uniminds/mimeType", required=False, multiple=True),
+      Field("study_target", "uniminds.StudyTarget", "https://schema.hbp.eu/uniminds/studyTarget", required=False, multiple=False),
+      Field("subject", "uniminds.Subject", "https://schema.hbp.eu/uniminds/subject", required=False, multiple=True),
+      Field("subjectgroup", "uniminds.SubjectGroup", "https://schema.hbp.eu/uniminds/subjectGroup", required=False, multiple=True))
+        
 
 class FileBundleGroup(UnimindsObject):
     """
@@ -665,7 +675,9 @@ if __name__=='__main__':
     from fairgraph import uniminds, KGClient
     token = os.environ['HBP_token']
     client = KGClient(token)
-    for cls in uniminds.list_kg_classes():
-        print(cls.__name__)
-        # for f in cls.fields:
-        #     print('    - %s' % f.name)
+
+    # person = Person.list(client, size=10)[0]
+    # print(person)
+    person = Person(name='Zerlaut, Yann', family_name='Zerlaut', given_name ='Yann')
+    person.save(client)
+    
