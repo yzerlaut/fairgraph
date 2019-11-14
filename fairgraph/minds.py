@@ -559,4 +559,3 @@ def list_kg_classes():
 
 # Alias some classes to reflect names used in KG Search
 Project = PLAComponent
-

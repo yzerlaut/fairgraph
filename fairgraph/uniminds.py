@@ -240,7 +240,7 @@ class FileBundle(UnimindsObject):
     docstring
     """
     _path = "/core/filebundle/v1.0.0"
-    type = ["uniminds:Filebundle"]
+    type = ["uniminds:FileBundle"]
     fields = (
       # attributes  
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
@@ -667,31 +667,3 @@ def list_kg_classes():
 
 class UniMINDSOption():
     pass
-
-
-
-if __name__=='__main__':
-
-    import os, hashlib
-
-    from fairgraph.uniminds import ModelInstance, FileBundle
-    from fairgraph.base import KGQuery
-    from fairgraph import KGClient
-
-    client = KGClient(os.environ["HBP_token"])
-
-    # create a new ModelInstance
-    name="Test2 by yann"
-    minst = ModelInstance(name=name,
-                          identifier = hashlib.sha1(name.encode('utf-8')).hexdigest(),
-                          description='this is a test 2',
-                          version='v2')
-    minst.save(client)
-
-    full_name = 'filebundle for %s' % name
-    # create a FileBundle
-    fb = FileBundle(name=full_name,
-                    url='www.theurlofthemodel.eu',
-                    identifier = hashlib.sha1(full_name.encode('utf-8')).hexdigest(),
-                    model_instance = minst)
-    fb.save(client)
