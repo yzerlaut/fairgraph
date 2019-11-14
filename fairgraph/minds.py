@@ -560,12 +560,3 @@ def list_kg_classes():
 # Alias some classes to reflect names used in KG Search
 Project = PLAComponent
 
-
-if __name__=='__main__':
-
-    import os
-    from fairgraph import minds, KGClient
-    token = os.environ['HBP_token']
-    client = KGClient(token)
-    for cls in minds.list_kg_classes():
-        print(cls.__name__)

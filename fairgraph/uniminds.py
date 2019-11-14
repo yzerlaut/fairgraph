@@ -246,7 +246,7 @@ class FileBundle(UnimindsObject):
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("brain_structure", "uniminds.BrainStructure", "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
       Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
-      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
+      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=False),
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("url", basestring, "http://schema.org/url", required=False, multiple=False),
       Field("usage_notes", basestring, "https://schema.hbp.eu/uniminds/usageNotes", required=False, multiple=False),
@@ -261,14 +261,14 @@ class FileBundle(UnimindsObject):
       Field("study_target", "uniminds.StudyTarget", "https://schema.hbp.eu/uniminds/studyTarget", required=False, multiple=False),
       Field("subject", "uniminds.Subject", "https://schema.hbp.eu/uniminds/subject", required=False, multiple=True),
       Field("subjectgroup", "uniminds.SubjectGroup", "https://schema.hbp.eu/uniminds/subjectGroup", required=False, multiple=True))
-        
+    
 
 class FileBundleGroup(UnimindsObject):
     """
     docstring
     """
     _path = "/options/filebundlegroup/v1.0.0"
-    type = ["uniminds:Filebundlegroup"]
+    type = ["uniminds:FileBundlegroup"]
     fields = (
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
@@ -667,3 +667,31 @@ def list_kg_classes():
 
 class UniMINDSOption():
     pass
+
+
+
+if __name__=='__main__':
+
+    import os, hashlib
+
+    from fairgraph.uniminds import ModelInstance, FileBundle
+    from fairgraph.base import KGQuery
+    from fairgraph import KGClient
+
+    client = KGClient(os.environ["HBP_token"])
+
+    # create a new ModelInstance
+    name="Test2 by yann"
+    minst = ModelInstance(name=name,
+                          identifier = hashlib.sha1(name.encode('utf-8')).hexdigest(),
+                          description='this is a test 2',
+                          version='v2')
+    minst.save(client)
+
+    full_name = 'filebundle for %s' % name
+    # create a FileBundle
+    fb = FileBundle(name=full_name,
+                    url='www.theurlofthemodel.eu',
+                    identifier = hashlib.sha1(full_name.encode('utf-8')).hexdigest(),
+                    model_instance = minst)
+    fb.save(client)
