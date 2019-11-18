@@ -67,6 +67,38 @@ class Activity(MINDSObject):
       Field("protocols", "minds.Protocol", "https://schema.hbp.eu/minds/protocols", required=False, multiple=True))
 
 
+<<<<<<< HEAD
+=======
+class Method(MINDSObject):
+    """docstring"""
+    _path = "/experiment/method/v1.0.0"
+    #type = ["https://schema.hbp.eu/ExperimentMethod"]
+    type = ["minds:ExperimentMethod"]
+    property_names = ["name", "associated_with"]
+
+    
+class Protocol(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/protocol/v1.0.0"
+    #type = ["https://schema.hbp.eu/protocol"]
+    type = ["minds:protocol"]
+    property_names = ["name", "associated_with"]
+
+    
+class Preparation(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/preparation/v1.0.0"
+    #type = ["https://schema.hbp.eu/preparation"]
+    type = ["minds:preparation"]
+    property_names = ["name", "associated_with"]
+
+    
+class SpecimenGroup(MINDSObject):
+    """docstring"""
+    _path = "/core/specimengroup/v1.0.0"
+    type = ["minds:SpecimenGroup"]
+    property_names = ["created_at", "subjects", "name", "associated_with"]
+>>>>>>> 6d1a61d19ecf67a01f086fade4fcb3a1e38e8044
 
 class AgeCategory(MINDSObject):
     """
@@ -559,3 +591,37 @@ def list_kg_classes():
 
 # Alias some classes to reflect names used in KG Search
 Project = PLAComponent
+<<<<<<< HEAD
+=======
+
+
+# todo: integrate this into the registry
+obj_types = {
+    "dataset": Dataset,
+    "activity": Activity,
+    "methods": Method,
+    "specimen_group": SpecimenGroup,
+    "subjects": MINDSSubject,
+    "license": License,
+    "embargo_status": EmbargoStatus,
+    "samples": Sample,
+    "owners": Person,
+    "contributors": Person,
+    "component": PLAComponent,
+    "age_category": AgeCategory,
+    "sex": Sex,
+    "species": Species,
+    "parcellationRegion": ParcellationRegion
+}
+
+if __name__=='__main__':
+    import os
+    from fairgraph.client import KGClient
+    token = os.environ["HBP_token"]
+    nexus_endpoint = "https://nexus.humanbrainproject.org/v0"
+    client = KGClient(token, nexus_endpoint=nexus_endpoint)
+    from fairgraph.minds import Protocol, ParcellationRegion, Preparation, Person
+    person = Person.list(client, size=10)[0]
+    print(person.exists(client))
+    
+>>>>>>> 6d1a61d19ecf67a01f086fade4fcb3a1e38e8044
