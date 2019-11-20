@@ -67,8 +67,6 @@ class Activity(MINDSObject):
       Field("protocols", "minds.Protocol", "https://schema.hbp.eu/minds/protocols", required=False, multiple=True))
 
 
-<<<<<<< HEAD
-=======
 class Method(MINDSObject):
     """docstring"""
     _path = "/experiment/method/v1.0.0"
@@ -98,7 +96,6 @@ class SpecimenGroup(MINDSObject):
     _path = "/core/specimengroup/v1.0.0"
     type = ["minds:SpecimenGroup"]
     property_names = ["created_at", "subjects", "name", "associated_with"]
->>>>>>> 6d1a61d19ecf67a01f086fade4fcb3a1e38e8044
 
 class AgeCategory(MINDSObject):
     """

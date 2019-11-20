@@ -5,7 +5,6 @@ try:
 except NameError:
     basestring = str
 
-<<<<<<< HEAD
 from fairgraph.base import KGObject, KGProxy, KGQuery, cache, as_list, Field
 from fairgraph.data import FileAssociation, CSCSFile
 from fairgraph.commons import QuantitativeValue
@@ -13,18 +12,13 @@ from fairgraph.commons import QuantitativeValue
 try:
     from .minds import MINDSObject
 except ImportError:
-=======
-try:
-    from .minds import MINDSObject
-except ModuleNotFoundError:
->>>>>>> 6d1a61d19ecf67a01f086fade4fcb3a1e38e8044
     from minds import MINDSObject
 
-
+    
 class UnimindsObject(MINDSObject):
     namespace = "uniminds"
 
-
+    
 class AbstractionLevel(UnimindsObject):
     """
     docstring
