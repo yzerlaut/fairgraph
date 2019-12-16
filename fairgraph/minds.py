@@ -67,6 +67,35 @@ class Activity(MINDSObject):
       Field("protocols", "minds.Protocol", "https://schema.hbp.eu/minds/protocols", required=False, multiple=True))
 
 
+class Method(MINDSObject):
+    """docstring"""
+    _path = "/experiment/method/v1.0.0"
+    #type = ["https://schema.hbp.eu/ExperimentMethod"]
+    type = ["minds:ExperimentMethod"]
+    property_names = ["name", "associated_with"]
+
+    
+class Protocol(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/protocol/v1.0.0"
+    #type = ["https://schema.hbp.eu/protocol"]
+    type = ["minds:protocol"]
+    property_names = ["name", "associated_with"]
+
+    
+class Preparation(MINDSObject):
+    """ TO BE CHECKED """
+    _path = "/experiment/preparation/v1.0.0"
+    #type = ["https://schema.hbp.eu/preparation"]
+    type = ["minds:preparation"]
+    property_names = ["name", "associated_with"]
+
+    
+class SpecimenGroup(MINDSObject):
+    """docstring"""
+    _path = "/core/specimengroup/v1.0.0"
+    type = ["minds:SpecimenGroup"]
+    property_names = ["created_at", "subjects", "name", "associated_with"]
 
 class AgeCategory(MINDSObject):
     """
@@ -222,6 +251,7 @@ class Dataset(MINDSObject):
         progress_bar = tqdm(total=total_data_size)
         for entry in contents:
             local_path = os.path.join(local_directory, entry["name"])
+            print(local_path)
             if entry["name"].endswith("/"):
                 os.makedirs(local_path, exist_ok=True)
             else:
@@ -558,13 +588,3 @@ def list_kg_classes():
 
 # Alias some classes to reflect names used in KG Search
 Project = PLAComponent
-
-
-if __name__=='__main__':
-
-    import os
-    from fairgraph import minds, KGClient
-    token = os.environ['HBP_token']
-    client = KGClient(token)
-    for cls in minds.list_kg_classes():
-        print(cls.__name__)
