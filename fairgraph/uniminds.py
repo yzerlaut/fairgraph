@@ -14,37 +14,25 @@ try:
 except ImportError:
     from minds import MINDSObject
 
-
+    
 class UnimindsObject(MINDSObject):
     namespace = "uniminds"
 
-
-class Person(UnimindsObject):
-    """
-    docstring
-    """
-    _path = "/core/person/v1.0.0"
-    type = ["uniminds:Person"]
-    fields = (
-      Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
-      Field("email", basestring, "http://schema.org/email", required=False, multiple=False),
-      Field("family_name", basestring, "http://schema.org/familyName", required=False, multiple=False),
-      Field("given_name", basestring, "http://schema.org/givenName", required=False, multiple=False),
-      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
-      Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
-      Field("orcid", basestring, "https://schema.hbp.eu/uniminds/orcid", required=False, multiple=False))
-
-
+    
 class AbstractionLevel(UnimindsObject):
     """
     docstring
     """
     _path = "/options/abstractionlevel/v1.0.0"
-    type = ["uniminds:Abstractionlevel"]
+    type = ["uniminds:AbstractionLevel"]
     fields = (
-      Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
-      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
-      Field("name", basestring, "http://schema.org/name", required=False, multiple=False))
+        # attributes
+        Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
+        Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
+        Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
+        # links
+        Field("abstraction_level", "Uniminds.AbstractionLevel", "https://schema.hbp.eu/uniminds/abstractionLevel", required=False, multiple=False),
+    )
 
 
 class AgeCategory(UnimindsObject):
@@ -52,7 +40,7 @@ class AgeCategory(UnimindsObject):
     docstring
     """
     _path = "/options/agecategory/v1.0.0"
-    type = ["uniminds:Agecategory"]
+    type = ["uniminds:AgeCategory"]
     fields = (
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
@@ -109,16 +97,16 @@ class Dataset(UnimindsObject):
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("brain_structure", BrainStructure, "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=False),
       Field("cellular_target", CellularTarget, "https://schema.hbp.eu/uniminds/cellularTarget", required=False, multiple=False),
-      Field("contributor", Person, "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
+      Field("contributor", "uniminds.Person", "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
       #Field("created_as", basestring, "https://schema.hbp.eu/uniminds/createdAs", required=False, multiple=False),
-      Field("custodian", Person, "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=True),
+      Field("custodian", "uniminds.Person", "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=True),
       Field("doi", "uniminds.Doi", "https://schema.hbp.eu/uniminds/doi", required=False, multiple=False),
       Field("embargo_status", "uniminds.EmbargoStatus", "https://schema.hbp.eu/uniminds/embargoStatus", required=False, multiple=False),
       Field("ethics_approval", "uniminds.EthicsApproval", "https://schema.hbp.eu/uniminds/ethicsApproval", required=False, multiple=False),
       Field("funding_information", "uniminds.FundingInformation", "https://schema.hbp.eu/uniminds/fundingInformation", required=False, multiple=False),
       Field("hbp_component", "uniminds.HBPComponent", "https://schema.hbp.eu/uniminds/hbpComponent", required=False, multiple=False),
       Field("license", "uniminds.License", "https://schema.hbp.eu/uniminds/license", required=False, multiple=False),
-      Field("main_contact", Person, "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=True),
+      Field("main_contact", "uniminds.Person", "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=True),
       Field("main_file_bundle", "uniminds.FileBundle", "https://schema.hbp.eu/uniminds/mainFileBundle", required=False, multiple=True),
       Field("method", "uniminds.Method", "https://schema.hbp.eu/uniminds/method", required=False, multiple=True),
       Field("project", "uniminds.Project", "https://schema.hbp.eu/uniminds/project", required=False, multiple=False),
@@ -240,25 +228,35 @@ class FileBundle(UnimindsObject):
     docstring
     """
     _path = "/core/filebundle/v1.0.0"
-    type = ["uniminds:Filebundle"]
+    type = ["uniminds:FileBundle"]
     fields = (
+      # attributes  
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
+      Field("brain_structure", "uniminds.BrainStructure", "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
       Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
-      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
+      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=False),
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("url", basestring, "http://schema.org/url", required=False, multiple=False),
       Field("usage_notes", basestring, "https://schema.hbp.eu/uniminds/usageNotes", required=False, multiple=False),
+      # links
       Field("file", File, "https://schema.hbp.eu/uniminds/file", required=False, multiple=False),
       Field("file_bundle", "uniminds.FileBundle", "https://schema.hbp.eu/uniminds/fileBundle", required=False, multiple=False),
-      Field("mime_type", "uniminds.MimeType", "https://schema.hbp.eu/uniminds/mimeType", required=False, multiple=True))
-
+      Field("main_file_bundle", "uniminds.FileBundle", "https://schema.hbp.eu/uniminds/mainFileBundle", required=False, multiple=True),
+      Field("method", "uniminds.Method", "https://schema.hbp.eu/uniminds/method", required=False, multiple=False),
+      Field("model_instance", "uniminds.ModelInstance", "https://schema.hbp.eu/uniminds/modelinstance", required=False, multiple=False),
+      Field("publication", "uniminds.Publication", "https://schema.hbp.eu/uniminds/publication", required=False, multiple=False),
+      Field("mime_type", "uniminds.MimeType", "https://schema.hbp.eu/uniminds/mimeType", required=False, multiple=True),
+      Field("study_target", "uniminds.StudyTarget", "https://schema.hbp.eu/uniminds/studyTarget", required=False, multiple=False),
+      Field("subject", "uniminds.Subject", "https://schema.hbp.eu/uniminds/subject", required=False, multiple=True),
+      Field("subjectgroup", "uniminds.SubjectGroup", "https://schema.hbp.eu/uniminds/subjectGroup", required=False, multiple=True))
+    
 
 class FileBundleGroup(UnimindsObject):
     """
     docstring
     """
     _path = "/options/filebundlegroup/v1.0.0"
-    type = ["uniminds:Filebundlegroup"]
+    type = ["uniminds:FileBundleGroup"]
     fields = (
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
@@ -314,7 +312,7 @@ class HBPComponent(UnimindsObject):
       Field("associated_task", basestring, "https://schema.hbp.eu/uniminds/associatedTask", required=False, multiple=False),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
-      Field("component_owner", Person, "https://schema.hbp.eu/uniminds/componentOwner", required=False, multiple=False))
+      Field("component_owner", "uniminds.Person", "https://schema.hbp.eu/uniminds/componentOwner", required=False, multiple=False))
 
 
 class License(UnimindsObject):
@@ -404,9 +402,9 @@ class ModelInstance(UnimindsObject):
       Field("abstraction_level", AbstractionLevel, "https://schema.hbp.eu/uniminds/abstractionLevel", required=False, multiple=False),
       Field("brain_structure", BrainStructure, "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
       Field("cellular_target", CellularTarget, "https://schema.hbp.eu/uniminds/cellularTarget", required=False, multiple=True),
-      Field("contributor", Person, "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
-      Field("custodian", Person, "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=False),
-      Field("main_contact", Person, "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
+      Field("contributor", "uniminds.Person", "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
+      Field("custodian", "uniminds.Person", "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=False),
+      Field("main_contact", "uniminds.Person", "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
       Field("modelformat", ModelFormat, "https://schema.hbp.eu/uniminds/modelFormat", required=False, multiple=True),
       Field("modelscope", "uniminds.ModelScope", "https://schema.hbp.eu/uniminds/modelScope", required=False, multiple=False),
       Field("publication", "uniminds.Publication", "https://schema.hbp.eu/uniminds/publication", required=False, multiple=False),
@@ -436,6 +434,22 @@ class Organization(UnimindsObject):
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
       Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("created_as", basestring, "https://schema.hbp.eu/uniminds/createdAs", required=False, multiple=False))
+
+
+class Person(UnimindsObject):
+    """
+    docstring
+    """
+    _path = "/core/person/v1.0.0"
+    type = ["uniminds:Person"]
+    fields = (
+      Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
+      Field("email", basestring, "http://schema.org/email", required=False, multiple=False),
+      Field("family_name", basestring, "http://schema.org/familyName", required=False, multiple=False),
+      Field("given_name", basestring, "http://schema.org/givenName", required=False, multiple=False),
+      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
+      Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
+      Field("orcid", basestring, "https://schema.hbp.eu/uniminds/orcid", required=False, multiple=False))
 
 
 class Project(UnimindsObject):
@@ -657,15 +671,3 @@ def list_kg_classes():
 
 class UniMINDSOption():
     pass
-
-
-if __name__=='__main__':
-
-    import os
-    from fairgraph import uniminds, KGClient
-    token = os.environ['HBP_token']
-    client = KGClient(token)
-    for cls in uniminds.list_kg_classes():
-        print(cls.__name__)
-        # for f in cls.fields:
-        #     print('    - %s' % f.name)
