@@ -391,7 +391,12 @@ class ModelInstance(UnimindsObject):
     docstring
     """
     _path = "/core/modelinstance/v1.0.0"
-    type = ["uniminds:Modelinstance"]
+    type = ["prov:Entity", "uniminds:Modelinstance"]
+    context = {
+        "prov": "http://www.w3.org/ns/prov#",
+        "wasGeneratedBy": "prov:wasGeneratedBy",
+        "wasDerivedFrom":"prov:wasDerivedFrom"
+    }
     fields = (
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
@@ -402,6 +407,8 @@ class ModelInstance(UnimindsObject):
       Field("abstraction_level", AbstractionLevel, "https://schema.hbp.eu/uniminds/abstractionLevel", required=False, multiple=False),
       Field("brain_structure", BrainStructure, "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
       Field("cellular_target", CellularTarget, "https://schema.hbp.eu/uniminds/cellularTarget", required=False, multiple=True),
+      Field("derived_from", Dataset, "wasDerivedFrom", required=False, multiple=True),
+      Field("generated_by", Dataset, "wasGeneratedBy", required=False, multiple=True),
       Field("contributor", "uniminds.Person", "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
       Field("custodian", "uniminds.Person", "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=False),
       Field("main_contact", "uniminds.Person", "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
