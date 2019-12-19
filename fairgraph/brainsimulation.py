@@ -226,6 +226,7 @@ class ModelInstance(KGObject):
     #  - fields of ModelInstance + eModel, morphology, mainModelScript, isPartOf (an MEModelRelease)
     fields = (
         Field("name", basestring, "name", required=True),
+        # Field("author", Person, "person", required=False),
         Field("brain_region", BrainRegion, "brainRegion", required=False),
         Field("species", Species, "species", required=False),
         Field("model_of", (CellType, BrainRegion), "modelOf", required=False),  # should be True, but causes problems for a couple of cases at the moment
@@ -815,13 +816,15 @@ class SimulationResult(KGObject):
                "target": "nsg:target",
                "schema": "http://schema.org/",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-               "prov": "http://www.w3.org/ns/prov#"}
-    fields = (Field("name", str, "name", required=True),
-              Field("description", str, "description", required=False),
-              Field("variable", str,
+               "prov": "http://www.w3.org/ns/prov#",
+               "wasGeneratedBy": "prov:wasGeneratedBy"}
+    fields = (Field("name", basestring, "name", required=True),
+              Field("description", basestring, "description", required=False),
+              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", required=False),
+              Field("variable", basestring,
                          "Variable shape (e.g: voltage, curent).",
                          required=True),
-              Field("target", str,
+              Field("target", basestring,
                     """The variable report target. It has to be one of:
                     - "compartment"
                     - "soma",
@@ -832,13 +835,12 @@ class SimulationResult(KGObject):
 
     def __init__(self, name,
                  variable='',
-                 target='soma',
-                 description='',
+                 generated_by='', target='soma', description='',
                  report_file=None,
                  id=None,
                  instance=None):
         super(SimulationResult, self).__init__(
-            name=name,
+            name=name, generated_by=generated_by,
             variable=variable, target=target, description=description,
             report_file=report_file,
             id=id, instance=instance
