@@ -819,24 +819,31 @@ class SimulationResult(KGObject):
               Field("variable", basestring, "variable", required=True),
               Field("target", basestring, "target", required=True),
               Field("report_file", (Distribution, basestring), "distribution"),
-              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy"),
+              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=True), # e.g. model + software
               Field("data_type", basestring, "dataType"),
               Field("description", basestring, "description", required=False),
+              Field("parameters", basestring, "parameters"),
               Field("timestamp", datetime,  "startedAtTime"),
               Field("brain_region", BrainRegion, "brainRegion"),
               Field("species", Species, "species"),
               Field("celltype", CellType, "celltype"))
 
     def __init__(self, name,
-                 variable='',
-                 generated_by='', target='soma', description='',
+                 variable='', target='',
                  report_file=None,
-                 id=None,
-                 instance=None):
+                 generated_by='',
+                 data_type = '',
+                 description='',
+                 timestamp=None,
+                 brain_region=None, species=None, parameters=None,
+                 id=None, instance=None):
+        
         super(SimulationResult, self).__init__(
             name=name, generated_by=generated_by,
             variable=variable, target=target, description=description,
-            report_file=report_file,
+            report_file=report_file, data_type=data_type,
+            timestamp=timestamp, brain_region=brain_region, species=species,
+            parameters=parametersm
             id=id, instance=instance
         )
         self._file_to_upload = None
