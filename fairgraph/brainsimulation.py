@@ -835,15 +835,16 @@ class SimulationResult(KGObject):
                  data_type = '',
                  description='',
                  timestamp=None,
-                 brain_region=None, species=None, parameters=None,
+                 brain_region=None, species=None, celltype=None, parameters=None,
                  id=None, instance=None):
         
         super(SimulationResult, self).__init__(
             name=name, generated_by=generated_by,
             variable=variable, target=target, description=description,
             report_file=report_file, data_type=data_type,
-            timestamp=timestamp, brain_region=brain_region, species=species,
-            parameters=parametersm
+            timestamp=timestamp, brain_region=brain_region,
+            species=species, celltype=celltype,
+            parameters=parameters,
             id=id, instance=instance
         )
         self._file_to_upload = None
