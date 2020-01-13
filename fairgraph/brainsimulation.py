@@ -818,7 +818,7 @@ class SimulationResult(KGObject):
     fields = (Field("name", basestring, "name", required=True),
               Field("variable", basestring, "variable", required=True),
               Field("target", basestring, "target", required=True),
-              Field("report_file", (Distribution, basestring), "distribution"),
+              Field("report_file", (Distribution, basestring), "distribution", required=True),
               Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=True), # e.g. model + software
               Field("data_type", basestring, "dataType"),
               Field("description", basestring, "description", required=False),
