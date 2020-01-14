@@ -4,7 +4,13 @@ from datetime import datetime
 
 from fairgraph import brainsimulation, KGClient
 
-client = KGClient(os.environ["HBP_token"]) # you need to have loaded you 
+dev = True
+if dev:
+    client = KGClient(os.environ["HBP_token"],
+                      nexus_endpoint='https://nexus-int.humanbrainproject.org/v0')
+else:
+    client = KGClient(os.environ["HBP_token"])
+    
 
 # The model source code is available in a public container at CSCS
 container_url = 'https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo'
@@ -13,7 +19,7 @@ os.system('wget https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/
 from fairgraph.base import Distribution
 
 # starting with script metadata underlying the model
-model_script = brainsimulation.ModelScript(name='Script for Toy modelA of network dynamics for demo purpose',
+model_script = brainsimulation.ModelScript(name='Script for Toy model#%s of network dynamics for demo purpose' % str(datetime.now),
                                            code_format='python',
                                            distribution=Distribution(container_url+'/model/model_script.py'),
                                            license='CC BY-SA')

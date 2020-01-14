@@ -739,6 +739,67 @@ class VariableReport(KGObject):
             rf.download(local_directory, client)
 
 
+class SimulationConfiguration(KGObject):
+    """docstring"""
+    namespace = DEFAULT_NAMESPACE
+    type = ["prov:Entity", "nsg:Entity", "nsg:SimulationConfiguration"]
+    _path = "/simulation/simulationconfiguration/v0.0.1"
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "description": "schema:description",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "variable": "nsg:variable",
+               "target": "nsg:target",
+               "brainRegion": "nsg:brainRegion",
+               "species": "nsg:species",
+               "celltype": "nsg:celltype",
+               "dataType": "nsg:dataType",
+               "prov": "http://www.w3.org/ns/prov#",
+               "startedAtTime": "prov:startedAtTime",
+               "wasGeneratedBy": "prov:wasGeneratedBy"}
+    fields = (Field("name", basestring, "name", required=True),
+              Field("variable", basestring, "variable", required=True),
+              Field("target", basestring, "target", required=True),
+              Field("report_file", (Distribution, basestring), "distribution", required=True),
+              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=False),
+              Field("data_type", basestring, "dataType"),
+              Field("description", basestring, "description", required=False),
+              Field("parameters", basestring, "parameters"),
+              Field("timestamp", datetime,  "startedAtTime"),
+              Field("brain_region", BrainRegion, "brainRegion"),
+              Field("species", Species, "species"),
+              Field("celltype", CellType, "celltype"))
+
+    def __init__(self, name,
+                 variable='', target='',
+                 report_file=None,
+                 generated_by='',
+                 data_type = '',
+                 description='',
+                 timestamp=None,
+                 brain_region=None, species=None, celltype=None, parameters=None,
+                 id=None, instance=None):
+        
+        super(SimulationResult, self).__init__(
+            name=name, generated_by=generated_by,
+            variable=variable, target=target, description=description,
+            report_file=report_file, data_type=data_type,
+            timestamp=timestamp, brain_region=brain_region,
+            species=species, celltype=celltype,
+            parameters=parameters,
+            id=id, instance=instance
+        )
+        self._file_to_upload = None
+        if isinstance(report_file, basestring):
+            if report_file.startswith("http"):
+                self.report_file = Distribution(location=report_file)
+            elif os.path.isfile(report_file):
+                self._file_to_upload = report_file
+                self.report_file = None
+        elif report_file is not None:
+            for rf in as_list(self.report_file):
+                assert isinstance(rf, Distribution)
+            
 class SimulationResult(KGObject):
     """docstring"""
     namespace = DEFAULT_NAMESPACE
