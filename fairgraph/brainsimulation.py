@@ -739,72 +739,183 @@ class VariableReport(KGObject):
             rf.download(local_directory, client)
 
 
+class Simulation(KGObject):
+    """  Here this is the Simulation *Activity*
+    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
+{
+    "@context": [
+        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
+        {
+            "this": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.1/shapes/"
+        },
+        "{{base}}/contexts/nexus/core/resource/v0.3.0"
+    ],
+    "@id": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.1",
+    "@type": "nxv:Schema",
+    "imports": [
+        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.0"
+    ],
+    "shapes": [
+        {
+            "@id": "this:SimulationShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.0/shapes/ActivityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "datatype": "xsd:string",
+                            "description": "Name of the simulation activity",
+                            "minCount": 1,
+                            "name": "name",
+                            "path": "schema:name"
+                        }
+                    ]
+                } 
+            ],
+            "label": "Simulation Result shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:Simulation"
+        }
+    ]
+}    
+    """
+    namespace = DEFAULT_NAMESPACE
+    type = ["prov:Activity", "nsg:Activity", "nsg:Simulation"]
+    _path = "/simulation/simulation/v0.0.1"
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "prov": "http://www.w3.org/ns/prov#",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "description": "schema:description",
+               "used": "prov:used",
+               "configurationUsed": "prov:used",
+               "modelUsed": "prov:used",
+               "startedAtTime": "prov:startedAtTime",
+               "endedAtTime": "prov:endedAtTime"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("description", basestring, "description"),
+        Field("configuration_used", "SimulationConfiguration", "configurationUsed"),
+        Field("model_used", ModelInstance, "modelUsed"),
+        Field("started_at_time", datetime, "startedAtTime", default=datetime.now),
+        Field("ended_at_time", datetime, "endedAtTime"),
+    )
+
+
 class SimulationConfiguration(KGObject):
-    """docstring"""
+    """
+{
+    "@context": [
+        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
+        {
+            "this": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2/shapes/"
+        },
+        "{{base}}/contexts/nexus/core/resource/v0.3.0"
+    ],
+    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2",
+    "@type": "nxv:Schema",
+    "imports": [
+        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
+    ],
+    "shapes": [
+        {
+            "@id": "this:SimulationConfigurationShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "datatype": "xsd:string",
+                            "description": "name of config",
+                            "minCount": 1,
+                            "name": "name",
+                            "path": "schema:name"
+                        }
+                    ]
+                }
+            ],
+            "label": "Simulation Configuration shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:SimulationConfiguration"
+        }
+    ],
+    "links": {
+        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
+        "self": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2"
+    }
+}
+    """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationConfiguration"]
-    _path = "/simulation/simulationconfiguration/v0.0.1"
+    _path = "/simulation/simulationconfiguration/v0.0.2"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
-               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-               "variable": "nsg:variable",
-               "target": "nsg:target",
-               "brainRegion": "nsg:brainRegion",
-               "species": "nsg:species",
-               "celltype": "nsg:celltype",
-               "dataType": "nsg:dataType",
-               "prov": "http://www.w3.org/ns/prov#",
-               "startedAtTime": "prov:startedAtTime",
-               "wasGeneratedBy": "prov:wasGeneratedBy"}
-    fields = (Field("name", basestring, "name", required=True),
-              Field("variable", basestring, "variable", required=True),
-              Field("target", basestring, "target", required=True),
-              Field("report_file", (Distribution, basestring), "distribution", required=True),
-              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=False),
-              Field("data_type", basestring, "dataType"),
-              Field("description", basestring, "description", required=False),
-              Field("parameters", basestring, "parameters"),
-              Field("timestamp", datetime,  "startedAtTime"),
-              Field("brain_region", BrainRegion, "brainRegion"),
-              Field("species", Species, "species"),
-              Field("celltype", CellType, "celltype"))
-
-    def __init__(self, name,
-                 variable='', target='',
-                 report_file=None,
-                 generated_by='',
-                 data_type = '',
-                 description='',
-                 timestamp=None,
-                 brain_region=None, species=None, celltype=None, parameters=None,
-                 id=None, instance=None):
-        
-        super(SimulationResult, self).__init__(
-            name=name, generated_by=generated_by,
-            variable=variable, target=target, description=description,
-            report_file=report_file, data_type=data_type,
-            timestamp=timestamp, brain_region=brain_region,
-            species=species, celltype=celltype,
-            parameters=parameters,
-            id=id, instance=instance
-        )
-        self._file_to_upload = None
-        if isinstance(report_file, basestring):
-            if report_file.startswith("http"):
-                self.report_file = Distribution(location=report_file)
-            elif os.path.isfile(report_file):
-                self._file_to_upload = report_file
-                self.report_file = None
-        elif report_file is not None:
-            for rf in as_list(self.report_file):
-                assert isinstance(rf, Distribution)
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("description", basestring, "description"),
+        # the following should store the machine-readable parameters:
+        Field("json_description", basestring, "json_description") 
+    )
+    
             
 class SimulationResult(KGObject):
-    """docstring"""
+    """
+    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
+{
+    "@context": [
+        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
+        {
+            "this": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4/shapes/"
+        },
+        "{{base}}/contexts/nexus/core/resource/v0.3.0"
+    ],
+    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4",
+    "@type": "nxv:Schema",
+    "imports": [
+        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
+    ],
+    "shapes": [
+        {
+            "@id": "this:SimulationResultShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "datatype": "xsd:string",
+                            "description": "name of the simulation result",
+                            "minCount": 1,
+                            "name": "name",
+                            "path": "schema:name"
+                        }
+                    ]
+                }
+            ],
+            "label": "Simulation Result shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:SimulationResult"
+        }
+    ],
+    "links": {
+        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
+        "self": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4"
+    }
+}
+    """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationResult"]
-    _path = "/simulation/simulationresult/v0.0.1"
+    _path = "/simulation/simulationresult/v0.0.4"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
@@ -819,37 +930,46 @@ class SimulationResult(KGObject):
                "startedAtTime": "prov:startedAtTime",
                "wasGeneratedBy": "prov:wasGeneratedBy"}
     fields = (Field("name", basestring, "name", required=True),
-              Field("variable", basestring, "variable", required=True),
-              Field("target", basestring, "target", required=True),
-              Field("report_file", (Distribution, basestring), "distribution", required=True),
-              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=False),
+              Field("variable", basestring, "variable"),
+              Field("target", basestring, "target"),
+              Field("report_file", (Distribution, basestring), "distribution"),
+              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy"),
               Field("data_type", basestring, "dataType"),
-              Field("description", basestring, "description", required=False),
+              Field("description", basestring, "description"),
               Field("parameters", basestring, "parameters"),
               Field("timestamp", datetime,  "startedAtTime"),
               Field("brain_region", BrainRegion, "brainRegion"),
               Field("species", Species, "species"),
               Field("celltype", CellType, "celltype"))
 
-    def __init__(self, name,
-                 variable='', target='',
-                 report_file=None,
+    def __init__(self,
+                 name,
                  generated_by='',
+                 report_file=None,
                  data_type = '',
+                 variable='',
+                 target='',
                  description='',
                  timestamp=None,
-                 brain_region=None, species=None, celltype=None, parameters=None,
+                 brain_region=None, species=None, celltype=None,
+                 parameters=None,
                  id=None, instance=None):
         
         super(SimulationResult, self).__init__(
-            name=name, generated_by=generated_by,
-            variable=variable, target=target, description=description,
-            report_file=report_file, data_type=data_type,
-            timestamp=timestamp, brain_region=brain_region,
-            species=species, celltype=celltype,
+            name=name,
+            generated_by=generated_by,
+            report_file=report_file,
+            data_type=data_type,
+            variable=variable,
+            target=target,
+            description=description,
             parameters=parameters,
-            id=id, instance=instance
-        )
+            timestamp=timestamp,
+            brain_region=brain_region,
+            species=species,
+            celltype=celltype,
+            id=id,
+            instance=instance)
         self._file_to_upload = None
         if isinstance(report_file, basestring):
             if report_file.startswith("http"):
@@ -885,6 +1005,7 @@ class SimulationResult(KGObject):
     def download(self, local_directory, client):
         for rf in as_list(self.report_file):
             rf.download(local_directory, client)
+
             
 def list_kg_classes():
     """List all KG classes defined in this module"""
