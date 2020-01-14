@@ -28,6 +28,28 @@ DEFAULT_NAMESPACE = "modelvalidation"
 
 ATTACHMENT_SIZE_LIMIT = 1024 * 1024  # 1 MB
 
+# An upload function used by all Results entity classes
+def upload_attachment(cls, file_path, client):
+    assert os.path.isfile(file_path)
+    statinfo = os.stat(file_path)
+    if statinfo.st_size > ATTACHMENT_SIZE_LIMIT:
+        raise Exception("File is too large to store directly in the KnowledgeGraph, please upload it to a Swift container")
+    # todo, use the Nexus HTTP client directly for the following
+    headers = client._nexus_client._http_client.auth_client.get_headers()
+    content_type, encoding = mimetypes.guess_type(file_path, strict=False)
+    response = requests.put("{}/attachment?rev={}".format(cls.id, cls.rev or 1),
+                            headers=headers,
+                            files={
+                                "file": (os.path.basename(file_path),
+                                         open(file_path, "rb"),
+                                         content_type)
+                            })
+    if response.status_code < 300:
+        logger.info("Added attachment {} to {}".format(file_path, cls.id))
+        cls._file_to_upload = None
+        cls.report_file = Distribution.from_jsonld(response.json()["distribution"][0])
+    else:
+        raise Exception(str(response.content))
 
 class HasAliasMixin(object):
 
@@ -395,86 +417,6 @@ class EModel(ModelInstance):
         KGObject.__init__(self, **args)
 
         
-class AnalysisResult(KGObject):
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/analysisresult/v1.0.0"
-    type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisResult"]
-    context =  [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("result_file", (Distribution, basestring), "distribution"),
-        Field("timestamp", datetime, "generatedAtTime", default=datetime.now)
-    )
-
-    def __init__(self, name, result_file=None, timestamp=None, id=None, instance=None):
-        super(AnalysisResult, self).__init__(
-            name=name, result_file=result_file, timestamp=timestamp,
-            id=id, instance=instance
-        )
-        self._file_to_upload = None
-        if isinstance(result_file, basestring):
-            if result_file.startswith("http"):
-                self.result_file = Distribution(location=result_file)
-            elif os.path.isfile(result_file):
-                self._file_to_upload = result_file
-                self.result_file = None
-        elif result_file is not None:
-            for rf in as_list(self.result_file):
-                assert isinstance(rf, Distribution)
-
-    @property
-    def _existence_query(self):
-        return {
-            "op": "and",
-            "value": [
-                {
-                    "path": "schema:name",
-                    "op": "eq",
-                    "value": self.name
-                },
-                {
-                    "path": "prov:generatedAtTime",
-                    "op": "eq",
-                    "value": self.timestamp.isoformat()
-                }
-            ]
-        }
-
-    def save(self, client):
-        super(AnalysisResult, self).save(client)
-        if self._file_to_upload:
-            self.upload_attachment(self._file_to_upload, client)
-
-    def upload_attachment(self, file_path, client):
-        assert os.path.isfile(file_path)
-        statinfo = os.stat(file_path)
-        if statinfo.st_size > ATTACHMENT_SIZE_LIMIT:
-            raise Exception("File is too large to store directly in the KnowledgeGraph, please upload it to a Swift container")
-        # todo, use the Nexus HTTP client directly for the following
-        headers = client._nexus_client._http_client.auth_client.get_headers()
-        content_type, encoding = mimetypes.guess_type(file_path, strict=False)
-        response = requests.put("{}/attachment?rev={}".format(self.id, self.rev or 1),
-                                headers=headers,
-                                files={
-                                    "file": (os.path.basename(file_path),
-                                             open(file_path, "rb"),
-                                             content_type)
-                                })
-        if response.status_code < 300:
-            logger.info("Added attachment {} to {}".format(file_path, self.id))
-            self._file_to_upload = None
-            self.result_file = Distribution.from_jsonld(response.json()["distribution"][0])
-        else:
-            raise Exception(str(response.content))
-
-    def download(self, local_directory, client):
-        for rf in as_list(self.result_file):
-            rf.download(local_directory, client)
-
-
 class ValidationTestDefinition(KGObject, HasAliasMixin):
     """docstring"""
     namespace = DEFAULT_NAMESPACE
@@ -819,7 +761,7 @@ class SimulationResult(KGObject):
               Field("variable", basestring, "variable", required=True),
               Field("target", basestring, "target", required=True),
               Field("report_file", (Distribution, basestring), "distribution", required=True),
-              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=True), # e.g. model + software
+              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy", multiple=False),
               Field("data_type", basestring, "dataType"),
               Field("description", basestring, "description", required=False),
               Field("parameters", basestring, "parameters"),
@@ -877,33 +819,12 @@ class SimulationResult(KGObject):
             self.upload_attachment(self._file_to_upload, client)
 
     def upload_attachment(self, file_path, client):
-        assert os.path.isfile(file_path)
-        statinfo = os.stat(file_path)
-        if statinfo.st_size > ATTACHMENT_SIZE_LIMIT:
-            raise Exception("File is too large to store directly in the KnowledgeGraph, please upload it to a Swift container")
-        # todo, use the Nexus HTTP client directly for the following
-        headers = client._nexus_client._http_client.auth_client.get_headers()
-        content_type, encoding = mimetypes.guess_type(file_path, strict=False)
-        response = requests.put("{}/attachment?rev={}".format(self.id, self.rev or 1),
-                                headers=headers,
-                                files={
-                                    "file": (os.path.basename(file_path),
-                                             open(file_path, "rb"),
-                                             content_type)
-                                })
-        if response.status_code < 300:
-            logger.info("Added attachment {} to {}".format(file_path, self.id))
-            self._file_to_upload = None
-            self.report_file = Distribution.from_jsonld(response.json()["distribution"][0])
-        else:
-            raise Exception(str(response.content))
-
+        upload_attachment(self, file_path, client)
+        
     def download(self, local_directory, client):
         for rf in as_list(self.report_file):
             rf.download(local_directory, client)
             
-            
-    
 def list_kg_classes():
     """List all KG classes defined in this module"""
     return [obj for name, obj in inspect.getmembers(sys.modules[__name__])
