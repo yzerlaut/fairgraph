@@ -585,7 +585,60 @@ class ValidationResult(KGObject):
 
 
 class ValidationActivity(KGObject):
-    """docstring"""
+    """
+{
+    "@context": [
+        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
+        {
+            "this": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0/shapes/"
+        },
+        "{{base}}/contexts/nexus/core/resource/v0.3.0"
+    ],
+    "@id": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0",
+    "@type": "nxv:Schema",
+    "imports": [
+        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1"
+    ],
+    "shapes": [
+        {
+            "@id": "this:ModelValidationShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1/ActivityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "minCount": 3,
+                            "path": "prov:used"
+                        },
+                        {
+                            "class": "nsg:ValidationResult",
+                            "description": "Generated validation result.",
+                            "minCount": 1,
+                            "name": "Result",
+                            "path": "prov:generated",
+                            "seeAlso": "{{base}}/schemas/neurosciencegraph/simulation/validationresult/v0.1.0/shapes/ValidationResultShape"
+                        }
+                    ]
+                }
+            ],
+            "comment": "The analysis strategy/protocol is defined in a protocol.",
+            "label": "Model or simulation report analysis shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:ModelValidation"
+        }
+    ],
+    "nxv:rev": 2,
+    "nxv:published": true,
+    "nxv:deprecated": false,
+    "links": {
+        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
+        "self": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0"
+    }
+}    
+    """
     namespace = DEFAULT_NAMESPACE
     _path = "/simulation/modelvalidation/v0.2.0"  # only present in nexus-int
     type = ["prov:Activity", "nsg:ModelValidation"]
@@ -610,6 +663,7 @@ class ValidationActivity(KGObject):
         }
     ]
     fields = (
+        Field("name", basestring, "name"),
         Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
         Field("test_script", ValidationScript, "testUsed", required=True),
         Field("reference_data", Collection, "dataUsed", required=True),
@@ -767,37 +821,92 @@ class VariableReport(KGObject):
             rf.download(local_directory, client)
 
 
-class Simulation(KGObject):
+class SimulationActivity(KGObject):
     """  Here this is the Simulation *Activity*
     Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
 {
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.3/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.3",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4",
     "@type": "nxv:Schema",
     "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.0"
-    ]
+        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.4"
+    ],
+    "shapes": [
+        {
+            "@id": "this:SimulationActivityShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1/ActivityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "minCount": 2,
+                            "path": "prov:used"
+                        },
+                        {
+                            "class": "nsg:SimulationResult",
+                            "description": "Generated simulation result.",
+                            "minCount": 1,
+                            "name": "Result",
+                            "path": "prov:generated",
+                            "seeAlso": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4/shapes/SimulationResultShape"
+                        }
+                    ]
+                }
+            ],
+            "label": "Simulation report analysis shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:SimulationActivity"
+        }
+    ],
+    "links": {
+        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
+        "self": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4"
+    }
 }
     """
     namespace = DEFAULT_NAMESPACE
-    type = ["prov:Activity", "nsg:Activity", "nsg:Simulation"]
-    _path = "/simulation/simulation/v0.0.3"
-    context = {"schema": "http://schema.org/",
-               "name": "schema:name"}
+    _path = "/simulation/simulationactivity/v0.0.4"
+    type = ["prov:Activity", "nsg:SimulationActivity"]
+    context = [
+        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
+        "{{base}}/contexts/nexus/core/resource/v0.3.0",
+        {
+            "schema": "http://schema.org/",
+            "name": "schema:name",
+            "description": "schema:description",
+            "prov": "http://www.w3.org/ns/prov#",
+            "generated": "prov:generated",
+            "used": "prov:used",
+            "modelUsed": "prov:used",
+            "simUsed": "prov:used",
+            "configUsed": "prov:used",
+            "startedAtTime": "prov:startedAtTime",
+            "endedAtTime": "prov:endedAtTime",
+            "wasAssociatedWith": "prov:wasAssociatedWith",
+            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+            "referenceData": "nsg:referenceData"
+        }
+    ]
     fields = (
         Field("name", basestring, "name"),
-        # Field("description", basestring, "description"),
-        # Field("configuration_used", "brainsimulation.SimulationConfiguration", "configurationUsed"),
-        # Field("model_used", ModelInstance, "modelUsed"),
-        # Field("started_at_time", datetime, "startedAtTime", default=datetime.now),
-        # Field("ended_at_time", datetime, "endedAtTime"),
+        Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
+        Field("simulation_script", "brainsimulation.SimulationScript", "simUsed", required=True),
+        Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", required=True),
+        Field("timestamp", datetime,  "startedAtTime", required=True),
+        Field("result", "brainsimulation.SimulationResult", "generated", required=True),
+        Field("started_by", Person, "wasAssociatedWith"),
+        Field("end_timestamp",  datetime, "endedAtTime")
     )
+    
 
 
 class SimulationConfiguration(KGObject):
@@ -1001,6 +1110,40 @@ class SimulationResult(KGObject):
         for rf in as_list(self.report_file):
             rf.download(local_directory, client)
 
+class SimulationScript(KGObject):  # or ValidationImplementation
+    """docstring"""
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/validationscript/v0.1.0"
+    type = ["prov:Entity", "nsg:ModelValidationScript"]
+    context = [
+        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
+        "{{base}}/contexts/nexus/core/resource/v0.3.0",
+        {
+            "name": "schema:name",
+            "description": "schema:description",
+            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+            "prov": "http://www.w3.org/ns/prov#",
+            "schema": "http://schema.org/",
+            "dateCreated": "schema:dateCreated",
+            "repository": "schema:codeRepository",
+            "version": "schema:version",
+            "parameters": "nsg:parameters",
+            "path": "nsg:path",
+            "implements": "nsg:implements",
+            "oldUUID": "nsg:providerId"
+        }
+    ]
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("date_created", (date, datetime), "dateCreated", required=True),
+        Field("repository", IRI, "repository"),
+        Field("version", basestring, "version"),
+        Field("description", basestring, "description"),
+        Field("parameters", basestring, "parameters"),
+        Field("test_definition", ValidationTestDefinition, "implements"),
+        Field("old_uuid", basestring, "oldUUID")
+    )
+            
             
 def list_kg_classes():
     """List all KG classes defined in this module"""

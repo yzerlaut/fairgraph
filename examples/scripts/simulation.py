@@ -4,7 +4,7 @@ from datetime import datetime
 
 import sys
 sys.path.append('../../')
-from fairgraph import brainsimulation, KGClient
+from fairgraph import brainsimulation, KGClient, uniminds
 
 dev = True
 if dev:
@@ -12,7 +12,9 @@ if dev:
                       nexus_endpoint='https://nexus-int.humanbrainproject.org/v0')
 else:
     client = KGClient(os.environ["HBP_token"])
-    
+
+
+
 ###############################################
 ### Downloading the (toy) Model of the demo ###
 ###############################################
@@ -78,17 +80,28 @@ spike_result.save(client)
 print('The KG ID is:', spike_result.id)
 
 
-spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
+sc = brainsimulation.SimulationScript(name='script of toy model#%s in demo notebook'  % str(datetime.now),
+                                      date_created=datetime.now())
+sc.save(client)
+print('The KG ID is:', sc.id)
+
+spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
+                                                       simulation_script=sc)
 spike_config.save(client)
 print('The KG ID is:', spike_config.id)
 
-sc = brainsimulation.ValidationScript(name='script of toy model#%s in demo notebook'  % str(datetime.now), date_created=datetime.now())
-sim = brainsimulation.ValidationActivity(model_instance=my_model, test_script=sc)
-# sim = brainsimulation.Simulation(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
-                                 # description='',
-                                 # # configuration_used=spike_config,
-                                 # # model_used=my_model,
-                                 # ended_at_time=datetime.now())
+
+yann = uniminds.Person.by_name('Zerlaut, Yann', client)
+
+sim = brainsimulation.SimulationActivity(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
+                                         description='',
+                                         configuration_used=spike_config,
+                                         simulation_script=sc,
+                                         model_instance=my_model,
+                                         timestamp=datetime.now(),
+                                         result = spike_result,
+                                         started_by = yann,
+                                         ended_at_time=datetime.now())
 
 sim.save(client)
 print('The KG ID is:', sim.id)
