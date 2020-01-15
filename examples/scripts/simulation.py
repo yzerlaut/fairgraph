@@ -53,7 +53,6 @@ print('The KG ID is:', my_model.id)
 ### Documenting Simulation Metadata ###########
 ###############################################
 
-
 ## parameters
 from types import SimpleNamespace
 args = SimpleNamespace(dt=1e-4,
@@ -83,6 +82,16 @@ spike_config = brainsimulation.SimulationConfiguration(name='parameter configura
 spike_config.save(client)
 print('The KG ID is:', spike_config.id)
 
+sc = brainsimulation.ValidationScript(name='script of toy model#%s in demo notebook'  % str(datetime.now), date_created=datetime.now())
+sim = brainsimulation.ValidationActivity(model_instance=my_model, test_script=sc)
+# sim = brainsimulation.Simulation(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
+                                 # description='',
+                                 # # configuration_used=spike_config,
+                                 # # model_used=my_model,
+                                 # ended_at_time=datetime.now())
+
+sim.save(client)
+print('The KG ID is:', sim.id)
 
 # from types import SimpleNamespace
 

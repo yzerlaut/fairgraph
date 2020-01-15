@@ -17,7 +17,7 @@ from dateutil import parser as date_parser
 import requests
 from .base import KGObject, cache, KGProxy, build_kg_object, Distribution, as_list, KGQuery, Field, IRI
 from .commons import BrainRegion, CellType, Species, AbstractionLevel, ModelScope, OntologyTerm
-from .core import Organization, Person, Age, Collection
+from .core import Organization, Person, Age #, Collection
 from .utility import compact_uri, standard_context
 
 
@@ -66,6 +66,34 @@ class HasAliasMixin(object):
         return KGQuery(cls, query, context).resolve(client)
 
 
+class Collection(KGObject):
+    """docstring"""
+    namespace = DEFAULT_NAMESPACE
+    _path = "/core/collection/v0.1.0"
+    type = ["nsg:Collection", "prov:Entity"]
+    context = {
+        "schema": "http://schema.org/",
+        "prov": "http://www.w3.org/ns/prov#",
+        "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+        "name": "schema:name",
+        "size": "schema:size",
+        "hadMember": "prov:hadMember"
+    }
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("members", KGObject, "hadMember",  required=True, multiple=True)
+    )
+
+    def __init__(self, name, members, id=None, instance=None):
+        args = locals()
+        args.pop("self")
+        KGObject.__init__(self, **args)
+
+    @property
+    def size(self):
+        return len(as_list(self.members))
+
+    
 class ModelProject(KGObject, HasAliasMixin):
     """docstring"""
     namespace = DEFAULT_NAMESPACE
@@ -586,7 +614,7 @@ class ValidationActivity(KGObject):
         Field("test_script", ValidationScript, "testUsed", required=True),
         Field("reference_data", Collection, "dataUsed", required=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
-        Field("result", ValidationResult, "generated"),
+        Field("result", ValidationResult, "generated", required=True),
         Field("started_by", Person, "wasAssociatedWith"),
         Field("end_timestamp",  datetime, "endedAtTime")
     )
@@ -746,62 +774,29 @@ class Simulation(KGObject):
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.1/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.3/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.1",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/simulation/v0.0.3",
     "@type": "nxv:Schema",
     "imports": [
         "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:SimulationShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.0/shapes/ActivityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "Name of the simulation activity",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                } 
-            ],
-            "label": "Simulation Result shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:Simulation"
-        }
     ]
-}    
+}
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Activity", "nsg:Activity", "nsg:Simulation"]
-    _path = "/simulation/simulation/v0.0.1"
+    _path = "/simulation/simulation/v0.0.3"
     context = {"schema": "http://schema.org/",
-               "name": "schema:name",
-               "prov": "http://www.w3.org/ns/prov#",
-               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-               "description": "schema:description",
-               "used": "prov:used",
-               "configurationUsed": "prov:used",
-               "modelUsed": "prov:used",
-               "startedAtTime": "prov:startedAtTime",
-               "endedAtTime": "prov:endedAtTime"}
+               "name": "schema:name"}
     fields = (
-        Field("name", basestring, "name", required=True),
-        Field("description", basestring, "description"),
-        Field("configuration_used", "SimulationConfiguration", "configurationUsed"),
-        Field("model_used", ModelInstance, "modelUsed"),
-        Field("started_at_time", datetime, "startedAtTime", default=datetime.now),
-        Field("ended_at_time", datetime, "endedAtTime"),
+        Field("name", basestring, "name"),
+        # Field("description", basestring, "description"),
+        # Field("configuration_used", "brainsimulation.SimulationConfiguration", "configurationUsed"),
+        # Field("model_used", ModelInstance, "modelUsed"),
+        # Field("started_at_time", datetime, "startedAtTime", default=datetime.now),
+        # Field("ended_at_time", datetime, "endedAtTime"),
     )
 
 
