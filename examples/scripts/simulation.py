@@ -64,8 +64,7 @@ args = SimpleNamespace(dt=1e-4, tstop=1., seed=0,
                        freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
                        N_recVm=2, N_show=2)
 
-spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
-                                                       simulation_script=sc)
+spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
 spike_config.save(client)
 print('The KG ID is:', spike_config.id)
 

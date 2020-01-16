@@ -74,24 +74,6 @@ class HasAliasMixin(object):
         return KGQuery(cls, query, context).resolve(client)
 
 
-# class Collection(core.Collection):
-#     """docstring"""
-#     namespace = DEFAULT_NAMESPACE
-#     def __init__(self, name, members, id=None, instance=None):
-#         args = locals()
-#         args.pop("self")
-#         core.Collection.__init__(self, **args)
-
-
-# class Person(core.Person):
-#     """docstring"""
-#     namespace = DEFAULT_NAMESPACE
-#     def __init__(self, family_name, given_name, email=None, affiliation=None, id=None, instance=None):
-#         args = locals()
-#         args.pop("self")
-#         core.Collection.__init__(self, **args)
-        
-    
 class ModelProject(KGObject, HasAliasMixin):
     """docstring"""
     namespace = DEFAULT_NAMESPACE
@@ -150,8 +132,8 @@ class ModelProject(KGObject, HasAliasMixin):
         Field("abstraction_level", AbstractionLevel, "abstractionLevel"),
         Field("model_of", ModelScope, "modelOf"),
         Field("old_uuid", basestring, "oldUUID"),
-        Field("parents", "brainsimulation.ModelProject", "partOf", multiple=True),
-        #Field("instances", ("brainsimulation.ModelInstance", "brainsimulation.MEModel"),
+        Field("parents", "ModelProject", "partOf", multiple=True),
+        #Field("instances", ("ModelInstance", "brainsimulation.MEModel"),
         #      "dcterms:hasPart", multiple=True),
         # todo: kg query returns "hasPart", while nexus instances mostly use "dcterms:hasPart"
         #       suggest changing all instances to store "hasPart", with corrected context if needed
@@ -896,6 +878,7 @@ class SimulationActivity(KGObject):
     ]
     fields = (
         Field("name", basestring, "name"),
+        Field("description", basestring, "description"),
         Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
         Field("simulation_script", "brainsimulation.SimulationScript", "simUsed", required=True),
         Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", required=True),
@@ -963,9 +946,46 @@ class SimulationConfiguration(KGObject):
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
-        # the following should store the machine-readable parameters:
+        Field("config_file", (Distribution, basestring), "distribution"),
         Field("json_description", basestring, "json_description") 
     )
+
+    def __init__(self,
+                 name,
+                 config_file='',
+                 description='',
+                 json_description='',
+                 id=None, instance=None):
+        
+        super(SimulationConfiguration, self).__init__(
+            name=name,
+            config_file=config_file,
+            description=description,
+            json_description=json_description,
+            id=id,
+            instance=instance)
+        self._file_to_upload = None
+        if isinstance(config_file, basestring):
+            if config_file.startswith("http"):
+                self.config_file = Distribution(location=config_file)
+            elif os.path.isfile(config_file):
+                self._file_to_upload = config_file
+                self.config_file = None
+        elif config_file is not None:
+            for rf in as_list(self.config_file):
+                assert isinstance(rf, Distribution)
+
+    def save(self, client):
+        super(SimulationConfiguration, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
+    def download(self, local_directory, client):
+        for rf in as_list(self.config_file):
+            rf.download(local_directory, client)
     
             
 class SimulationResult(KGObject):
