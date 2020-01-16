@@ -17,7 +17,8 @@ from dateutil import parser as date_parser
 import requests
 from .base import KGObject, cache, KGProxy, build_kg_object, Distribution, as_list, KGQuery, Field, IRI
 from .commons import BrainRegion, CellType, Species, AbstractionLevel, ModelScope, OntologyTerm
-import .core as core # from .core import Organization, Person, Age, Collection
+from . import core ## What's the way to work with "core" classes ? 
+# from .core import Organization, Person, Age, Collection
 from .utility import compact_uri, standard_context
 
 
@@ -25,6 +26,13 @@ logger = logging.getLogger("fairgraph")
 mimetypes.init()
 
 DEFAULT_NAMESPACE = "modelvalidation"
+
+## What's the way to work with "core" classes ? Temporary fix:
+core.use_namespace(DEFAULT_NAMESPACE)
+Person = core.Person
+Collection = core.Collection
+Organization = core.Organization
+Age = core.Age
 
 ATTACHMENT_SIZE_LIMIT = 1024 * 1024  # 1 MB
 
@@ -66,39 +74,23 @@ class HasAliasMixin(object):
         return KGQuery(cls, query, context).resolve(client)
 
 
-class Collection(core.Collection):
-    """docstring"""
-    namespace = DEFAULT_NAMESPACE
-    def __init__(self, args):
-        args = locals()
-        args.pop("self")
-        KGObject.__init__(self, **args)
-    
-    # _path = "/core/collection/v0.1.0"
-    # type = ["nsg:Collection", "prov:Entity"]
-    # context = {
-    #     "schema": "http://schema.org/",
-    #     "prov": "http://www.w3.org/ns/prov#",
-    #     "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-    #     "name": "schema:name",
-    #     "size": "schema:size",
-    #     "hadMember": "prov:hadMember"
-    # }
-    # fields = (
-    #     Field("name", basestring, "name", required=True),
-    #     Field("members", KGObject, "hadMember",  required=True, multiple=True)
-    # )
-
-    # def __init__(self, name, members, id=None, instance=None):
-    #     args = locals()
-    #     args.pop("self")
-    #     KGObject.__init__(self, **args)
-
-    # @property
-    # def size(self):
-    #     return len(as_list(self.members))
+# class Collection(core.Collection):
+#     """docstring"""
+#     namespace = DEFAULT_NAMESPACE
+#     def __init__(self, name, members, id=None, instance=None):
+#         args = locals()
+#         args.pop("self")
+#         core.Collection.__init__(self, **args)
 
 
+# class Person(core.Person):
+#     """docstring"""
+#     namespace = DEFAULT_NAMESPACE
+#     def __init__(self, family_name, given_name, email=None, affiliation=None, id=None, instance=None):
+#         args = locals()
+#         args.pop("self")
+#         core.Collection.__init__(self, **args)
+        
     
 class ModelProject(KGObject, HasAliasMixin):
     """docstring"""
