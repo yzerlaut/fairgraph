@@ -1,14 +1,14 @@
 import os, time
 from datetime import datetime
 
-from fairgraph import brainsimulation, KGClient, base, uniminds
-# needs to have HBP_AUTH_TOKEN set as a bash variable
+from fairgraph import brainsimulation, KGClient, uniminds
+
 dev = True
 if dev:
-    client = KGClient(os.environ["HBP_AUTH_TOKEN"],
+    client = KGClient(os.environ["HBP_token"],
                       nexus_endpoint='https://nexus-int.humanbrainproject.org/v0')
 else:
-    client = KGClient(os.environ["HBP_AUTH_TOKEN"])
+    client = KGClient(os.environ["HBP_token"])
 
 
 
@@ -21,6 +21,8 @@ container_url = 'https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea
 if not os.path.isfile('model_script.py'):
     os.system('wget https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo/model/model_script.py')
 
+from fairgraph.base import Distribution
+
 ###############################################
 ### Documenting Model Metadata ################
 ###############################################
@@ -28,7 +30,7 @@ if not os.path.isfile('model_script.py'):
 ## --> starting with script metadata underlying the model
 model_script = brainsimulation.ModelScript(name='Script for Toy model#%s of network dynamics for demo purpose' % str(datetime.now),
                                            code_format='python',
-                                           distribution=base.Distribution(container_url+'/model/model_script.py'),
+                                           distribution=Distribution(container_url+'/model/model_script.py'),
                                            license='CC BY-SA')
 model_script.save(client) # SAVE IN KG
 print('The KG ID is:', model_script.id)
@@ -50,12 +52,6 @@ print('The KG ID is:', my_model.id)
 ### Documenting Simulation Metadata ###########
 ###############################################
 
-## script
-sc = brainsimulation.SimulationScript(name='script of toy model#%s in demo notebook'  % str(datetime.now),
-                                      date_created=datetime.now())
-sc.save(client)
-print('The KG ID is:', sc.id)
-
 ## parameters
 from types import SimpleNamespace
 args = SimpleNamespace(dt=1e-4,
@@ -69,12 +65,6 @@ args = SimpleNamespace(dt=1e-4,
                        N_pops=[80,20],
                        N_show=2)
 
-spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
-                                                       simulation_script=sc)
-spike_config.save(client)
-print('The KG ID is:', spike_config.id)
-
-## result
 spike_result = brainsimulation.SimulationResult(name='spike results of toy model#%s in demo notebook'  % str(datetime.now),
                                                 generated_by = my_model,
                                                 report_file='spike_long_run.npz',
@@ -87,18 +77,19 @@ spike_result.save(client)
 print('The KG ID is:', spike_result.id)
 
 
+sc = brainsimulation.SimulationScript(name='script of toy model#%s in demo notebook'  % str(datetime.now),
+                                      date_created=datetime.now())
+sc.save(client)
+print('The KG ID is:', sc.id)
 
-## agent
-
-yann = brainsimulation.Person(family_name='Zerlaut',
-                              given_name='Yann',
-                              email='yann.zerlaut@cnrs.fr')
-yann.save(client)
-print('The KG ID is:', yann.id)
+spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
+                                                       simulation_script=sc)
+spike_config.save(client)
+print('The KG ID is:', spike_config.id)
 
 
+yann = uniminds.Person.by_name('Zerlaut, Yann', client)
 
-## activity
 sim = brainsimulation.SimulationActivity(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
                                          description='',
                                          configuration_used=spike_config,

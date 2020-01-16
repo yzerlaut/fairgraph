@@ -17,7 +17,7 @@ from dateutil import parser as date_parser
 import requests
 from .base import KGObject, cache, KGProxy, build_kg_object, Distribution, as_list, KGQuery, Field, IRI
 from .commons import BrainRegion, CellType, Species, AbstractionLevel, ModelScope, OntologyTerm
-from .core import Organization, Person, Age #, Collection
+import .core as core # from .core import Organization, Person, Age, Collection
 from .utility import compact_uri, standard_context
 
 
@@ -66,32 +66,38 @@ class HasAliasMixin(object):
         return KGQuery(cls, query, context).resolve(client)
 
 
-class Collection(KGObject):
+class Collection(core.Collection):
     """docstring"""
     namespace = DEFAULT_NAMESPACE
-    _path = "/core/collection/v0.1.0"
-    type = ["nsg:Collection", "prov:Entity"]
-    context = {
-        "schema": "http://schema.org/",
-        "prov": "http://www.w3.org/ns/prov#",
-        "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-        "name": "schema:name",
-        "size": "schema:size",
-        "hadMember": "prov:hadMember"
-    }
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("members", KGObject, "hadMember",  required=True, multiple=True)
-    )
-
-    def __init__(self, name, members, id=None, instance=None):
+    def __init__(self, args):
         args = locals()
         args.pop("self")
         KGObject.__init__(self, **args)
+    
+    # _path = "/core/collection/v0.1.0"
+    # type = ["nsg:Collection", "prov:Entity"]
+    # context = {
+    #     "schema": "http://schema.org/",
+    #     "prov": "http://www.w3.org/ns/prov#",
+    #     "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+    #     "name": "schema:name",
+    #     "size": "schema:size",
+    #     "hadMember": "prov:hadMember"
+    # }
+    # fields = (
+    #     Field("name", basestring, "name", required=True),
+    #     Field("members", KGObject, "hadMember",  required=True, multiple=True)
+    # )
 
-    @property
-    def size(self):
-        return len(as_list(self.members))
+    # def __init__(self, name, members, id=None, instance=None):
+    #     args = locals()
+    #     args.pop("self")
+    #     KGObject.__init__(self, **args)
+
+    # @property
+    # def size(self):
+    #     return len(as_list(self.members))
+
 
     
 class ModelProject(KGObject, HasAliasMixin):
