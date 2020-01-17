@@ -40,7 +40,9 @@ args = SimpleNamespace(dt=1e-4, tstop=1., seed=0,
                        freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
                        N_recVm=2, N_show=2)
 
-analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now))
+analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
+                                        json_description=''.join(['%s=%s ; ' % kv for kv in vars(args).items()]),
+                                        config_file=base.Distribution(container_url+'/model/model_script.py'))
 analysis_config.save(client)
 print('The KG ID is:', analysis_config.id)
 
