@@ -26,12 +26,12 @@ if not os.path.isfile('model_script.py'):
 ###############################################
 
 ## --> starting with script metadata underlying the model
-model_script = brainsimulation.ModelScript(name='Script for Toy model#%s of network dynamics for demo purpose' % str(datetime.now),
+simulation_script = brainsimulation.ModelScript(name='Script for Toy model#%s of network dynamics for demo purpose' % str(datetime.now),
                                            code_format='python',
-                                           distribution=base.Distribution(container_url+'/model/model_script.py'),
+                                           distribution=base.Distribution(container_url+'/simulation_script.py'),
                                            license='CC BY-SA')
-model_script.save(client) # SAVE IN KG
-print('The KG ID is:', model_script.id)
+simulation_script.save(client) # SAVE IN KG
+print('The KG ID is:', simulation_script.id)
 
 
 ## --> building a model instance (version) from those metadata
@@ -64,9 +64,9 @@ args = SimpleNamespace(dt=1e-4, tstop=1., seed=0,
                        freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
                        N_recVm=2, N_show=2)
 
-spike_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
-spike_config.save(client)
-print('The KG ID is:', spike_config.id)
+sim_config = brainsimulation.SimulationConfiguration(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now))
+sim_config.save(client)
+print('The KG ID is:', sim_config.id)
 
 ## --> result
 
