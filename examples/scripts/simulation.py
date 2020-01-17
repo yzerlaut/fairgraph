@@ -100,6 +100,8 @@ Vm_result.save(client)
 print('The KG ID is:', Vm_result.id)
 
 ## --> agent
+# print(uniminds.list(client, api='query'))
+# yann = uniminds.Person.by_name('Zerlaut, Yann', client)
 yann = brainsimulation.Person(family_name='Zerlaut',
                               given_name='Yann',
                               email='yann.zerlaut@cnrs.fr')

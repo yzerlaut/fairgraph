@@ -35,36 +35,6 @@ Organization = core.Organization
 Age = core.Age
 
 
-CONTEXT = [
-    "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-    "{{base}}/contexts/nexus/core/resource/v0.3.0",
-    {
-        "wasGeneratedBy": "prov:wasGeneratedBy",
-        "name": "schema:name",
-        "label": "rdfs:label",
-        "alias": "nsg:alias",
-        "author": "schema:author",
-        "owner": "nsg:owner",
-        "description": "schema:description",
-        "json_description": "schema:description", # for machine-readable description
-        "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-        "prov": "http://www.w3.org/ns/prov#",
-        "schema": "http://schema.org/",
-        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        "dateCreated": "schema:dateCreated",
-        "dataType": "nsg:dataType",
-        "version": "schema:version",
-        "parameters": "nsg:parameters",
-        "used": "prov:used",
-        "testUsed": "prov:used",
-        "configurationUsed": "prov:used",
-        "dataUsed": "prov:used",
-        "startedAtTime": "prov:startedAtTime",
-        "endedAtTime": "prov:endedAtTime",
-        "wasAssociatedWith": "prov:wasAssociatedWith",
-    }
-]
-
 class AnalysisActivity(KGObject):
     """  Here this is the Simulation *Activity*
     Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
@@ -142,11 +112,11 @@ class AnalysisActivity(KGObject):
     fields = (
         Field("name", basestring, "name"),
         Field("description", basestring, "description"),
-        Field("analysis_script", "AnalysisScript", "scriptUsed", required=True),
-        Field("configuration_used", "AnalysisConfiguration", "configUsed", required=True),
+        Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", required=True),
+        Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", required=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
         Field("end_timestamp",  datetime, "endedAtTime"),
-        Field("result", "AnalysisResult", "generated", required=True),
+        Field("result", "analysis.AnalysisResult", "generated", required=True),
         Field("started_by", Person, "wasAssociatedWith")
     )
 
@@ -373,8 +343,42 @@ class AnalysisResult(KGObject):
             rf.download(local_directory, client)
 
             
-AnalysisScript = brainsimulation.SimulationScript
-    
+class AnalysisScript(KGObject):
+    """ NEED TO MAKE A DEDICATED shema"""
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/emodelscript/v0.1.0"
+    type = ["prov:Entity", "nsg:EModelScript"]  # generalize to other sub-types of script
+    context =  [  # todo: root should be set by client to nexus or nexus-int or whatever as required
+        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
+        "{{base}}/contexts/nexus/core/resource/v0.3.0",
+        {
+            "license": "schema:license"
+        }
+    ]
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("code_format", basestring, "code_format"),
+        Field("license", basestring, "license"),
+        Field("distribution", Distribution,  "distribution")
+    )
+
+    def __init__(self, name, code_location=None, code_format=None, license=None,
+                 distribution=None, id=None, instance=None):
+        super(AnalysisScript, self).__init__(name=name, code_format=code_format, license=license,
+                                          distribution=distribution, id=id, instance=instance)
+        if code_location and distribution:
+            raise ValueError("Cannot provide both code_location and distribution")
+        if code_location:
+            self.distribution = Distribution(location=code_location)
+
+    @property
+    def code_location(self):
+        if self.distribution:
+            return self.distribution.location
+        else:
+            return None
+
+
 
 def list_kg_classes():
     """List all KG classes defined in this module"""

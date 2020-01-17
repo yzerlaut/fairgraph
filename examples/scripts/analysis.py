@@ -29,7 +29,6 @@ if not os.path.isfile('model_script.py'):
 analysis_script = AnalysisScript(name='Script for Toy analysis#%s of network dynamics for demo purpose' % str(datetime.now),
                                  code_format='python',
                                  distribution=base.Distribution(container_url+'/model/model_script.py'),
-                                 date_created=datetime.now(),
                                  license='CC BY-SA')
 analysis_script.save(client) # SAVE IN KG
 print('The KG ID is:', analysis_script.id)
@@ -67,14 +66,14 @@ print('The KG ID is:', yann.id)
 
 ## --> activity
 sim = AnalysisActivity(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
-                                         description='',
-                                         configuration_used=analysis_config,
-                                         analysis_script=analysis_script,
-                                         timestamp=datetime.now(),
-                                         result = analysis_result,
-                                         started_by = yann,
-                                         ended_at_time=datetime.now())
+                       description='',
+                       configuration_used=analysis_config,
+                       analysis_script=analysis_script,
+                       timestamp=datetime.now(),
+                       result = analysis_result,
+                       started_by = yann,
+                       ended_at_time=datetime.now())
 
-#sim.save(client)
+sim.save(client)
 print('The KG ID is:', sim.id)
 
