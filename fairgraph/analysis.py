@@ -116,7 +116,7 @@ class AnalysisActivity(KGObject):
         Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", required=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
         Field("end_timestamp",  datetime, "endedAtTime"),
-        Field("result", "analysis.AnalysisResult", "generated", required=True),
+        Field("result", "analysis.AnalysisResult", "generated", required=True, multiple=True),
         Field("started_by", Person, "wasAssociatedWith")
     )
 

@@ -880,10 +880,10 @@ class SimulationActivity(KGObject):
         Field("name", basestring, "name"),
         Field("description", basestring, "description"),
         Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
-        Field("simulation_script", "brainsimulation.SimulationScript", "simUsed", required=True),
+        Field("simulation_script", "brainsimulation.ModelScript", "simUsed", required=True),
         Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", required=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
-        Field("result", "brainsimulation.SimulationResult", "generated", required=True),
+        Field("result", "brainsimulation.SimulationResult", "generated", required=True, multiple=True),
         Field("started_by", Person, "wasAssociatedWith"),
         Field("end_timestamp",  datetime, "endedAtTime")
     )
