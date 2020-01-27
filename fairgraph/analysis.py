@@ -100,6 +100,7 @@ class AnalysisActivity(KGObject):
             "prov": "http://www.w3.org/ns/prov#",
             "generated": "prov:generated",
             "used": "prov:used",
+            "dataUsed": "prov:used",
             "scriptUsed": "prov:used",
             "configUsed": "prov:used",
             "startedAtTime": "prov:startedAtTime",
@@ -112,6 +113,7 @@ class AnalysisActivity(KGObject):
     fields = (
         Field("name", basestring, "name"),
         Field("description", basestring, "description"),
+        Field("input_data", KGObject, "dataUsed", required=True),
         Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", required=True),
         Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", required=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
@@ -177,8 +179,7 @@ class AnalysisConfiguration(KGObject):
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
-        Field("config_file", (Distribution, basestring), "distribution"),
-        Field("json_description", basestring, "json_description") 
+        Field("config", (Distribution, dict, basestring), "distribution")
     )
 
     def __init__(self,
@@ -380,6 +381,110 @@ class AnalysisScript(KGObject):
 
 
 
+
+class Dataset(KGObject):
+    """
+{
+    "@context": [
+        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
+        {
+            "this": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1/shapes/"
+        },
+        "{{base}}/contexts/nexus/core/resource/v0.3.0"
+    ],
+    "@id": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1",
+    "@type": "nxv:Schema",
+    "imports": [
+        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
+    ],
+    "shapes": [
+        {
+            "@id": "this:DatasetShape",
+            "@type": "sh:NodeShape",
+            "and": [
+                {
+                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
+                },
+                {
+                    "property": [
+                        {
+                            "datatype": "xsd:string",
+                            "description": "name of dataset",
+                            "minCount": 1,
+                            "name": "name",
+                            "path": "schema:name"
+                        }
+                    ]
+                }
+            ],
+            "label": "Analysis Configuration shape",
+            "nodekind": "sh:BlankNodeOrIRI",
+            "targetClass": "nsg:Dataset"
+        }
+    ],
+    "links": {
+        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
+        "self": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1"
+    }
+}
+    """
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/dataset/v0.0.1"
+    type = ["prov:Entity", "nsg:Entity", "nsg:Dataset"]
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "description": "schema:description",
+               "contributor": "https://schema.hbp.eu/minds/contributors",
+               "url":"https://schema.hbp.eu/minds/container_url",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("description", basestring, "description"),
+        Field("identifier", basestring, "http://schema.org/identifier"),
+        Field("contributors", Person, "contributor", multiple=True),
+        Field("container_url", basestring, "url", required=False, multiple=False)
+    )
+
+    def download(self, local_directory, accept_terms_of_use=False):
+        # todo: add support for download as zip
+        # todo: check hashes
+        if not (accept_terms_of_use or self.accepted_terms_of_use):
+            if in_notebook():
+                from IPython.display import display, Markdown
+                display(Markdown(terms_of_use))
+            else:
+                print(terms_of_use)
+            user_response = raw_input("Do you accept the EBRAINS KG Terms of Service? ")
+            if user_response in ('y', 'Y', 'yes', 'YES'):
+                self.__class__.accepted_terms_of_use = True
+            else:
+                raise Exception("Please accept the terms of use before downloading the dataset")
+        response = requests.get(self.container_url + "?format=json")
+        if response.status_code != 200:
+            raise IOError(
+                "Unable to download dataset. Response code {}".format(response.status_code))
+        contents = response.json()
+        total_data_size = sum(item["bytes"] for item in contents) // 1024
+        progress_bar = tqdm(total=total_data_size)
+        for entry in contents:
+            local_path = os.path.join(local_directory, entry["name"])
+            print(local_path)
+            if entry["name"].endswith("/"):
+                os.makedirs(local_path, exist_ok=True)
+            else:
+                response2 = requests.get(self.container_url + "/" + entry["name"])
+                if response2.status_code == 200:
+                    with open(local_path, "wb") as fp:
+                        fp.write(response2.content)
+                    progress_bar.update(entry["bytes"] // 1024)
+                else:
+                    raise IOError(
+                        "Unable to download file '{}'. Response code {}".format(
+                            local_path, response2.status_code))
+        progress_bar.close()
+
+
+        
 def list_kg_classes():
     """List all KG classes defined in this module"""
     return [obj for name, obj in inspect.getmembers(sys.modules[__name__])
