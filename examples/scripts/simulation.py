@@ -36,7 +36,7 @@ print('The KG ID is:', simulation_script.id)
 
 ## --> building a model instance (version) from those metadata
 my_model = brainsimulation.ModelInstance(name= 'Toy model#%s of neural network dynamics for demo purpose' % str(datetime.now),
-                                         main_script=model_script,
+                                         main_script=simulation_script,
                                          description="""
                                          This model#%s implements a very simple description of desynchronized 
                                          activity in neural assemblies:
@@ -112,7 +112,7 @@ print('The KG ID is:', yann.id)
 ## --> activity
 sim = brainsimulation.SimulationActivity(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
                                          description='',
-                                         configuration_used=spike_config,
+                                         configuration_used=sim_config,
                                          simulation_script=sc,
                                          model_instance=my_model,
                                          timestamp=datetime.now(),

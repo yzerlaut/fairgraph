@@ -391,7 +391,7 @@ class ModelInstance(UnimindsObject):
     docstring
     """
     _path = "/core/modelinstance/v1.0.0"
-    type = ["prov:Entity", "uniminds:Modelinstance"]
+    type = ["prov:Entity", "uniminds:ModelInstance"]
     context = {
         "prov": "http://www.w3.org/ns/prov#",
         "wasGeneratedBy": "prov:wasGeneratedBy",
