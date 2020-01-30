@@ -405,8 +405,8 @@ class ModelInstance(UnimindsObject):
       Field("contributor", "uniminds.Person", "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
       Field("custodian", "uniminds.Person", "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=False),
       Field("main_contact", "uniminds.Person", "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
-      Field("modelformat", ModelFormat, "https://schema.hbp.eu/uniminds/modelFormat", required=False, multiple=True),
-      Field("modelscope", "uniminds.ModelScope", "https://schema.hbp.eu/uniminds/modelScope", required=False, multiple=False),
+      Field("model_format", ModelFormat, "https://schema.hbp.eu/uniminds/modelFormat", required=False, multiple=True),
+      Field("model_scope", "uniminds.ModelScope", "https://schema.hbp.eu/uniminds/modelScope", required=False, multiple=False),
       Field("publication", "uniminds.Publication", "https://schema.hbp.eu/uniminds/publication", required=False, multiple=False),
       Field("study_target", "uniminds.StudyTarget", "https://schema.hbp.eu/uniminds/studyTarget", required=False, multiple=True))
 
