@@ -391,18 +391,22 @@ class ModelInstance(UnimindsObject):
     docstring
     """
     _path = "/core/modelinstance/v1.0.0"
-    type = ["prov:Entity", "uniminds:ModelInstance"]
+    type = ["prov:Entity", "uniminds:Modelinstance"]
     context = {
+        "schema":"http://schema.org",
+        "name":"schema:name",
+        "description":"schema:description",
+        "identifier":"schema:identifier",
         "prov": "http://www.w3.org/ns/prov#",
         "wasGeneratedBy": "prov:wasGeneratedBy",
         "wasDerivedFrom":"prov:wasDerivedFrom"
     }
     fields = (
+      Field("name", basestring, "name", required=False, multiple=False),
+      Field("identifier", basestring, "identifier", required=False, multiple=True),
+      Field("description", basestring, "description", required=False, multiple=False),
       Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
-      Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
-      Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
       Field("license", License, "http://schema.org/license", required=False, multiple=False),
-      Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
       Field("version", basestring, "http://schema.org/version", required=False, multiple=False),
       Field("abstraction_level", AbstractionLevel, "https://schema.hbp.eu/uniminds/abstractionLevel", required=False, multiple=False),
       Field("brain_structure", BrainStructure, "https://schema.hbp.eu/uniminds/brainStructure", required=False, multiple=True),
