@@ -28,7 +28,7 @@ if not os.path.isfile('model_script.py'):
 ## --> starting with script metadata underlying the model
 analysis_script = AnalysisScript(name='Script for Toy analysis#%s of network dynamics for demo purpose' % str(datetime.now),
                                  code_format='python',
-                                 distribution=base.Distribution(container_url+'/model/model_script.py'),
+                                 script=base.Distribution(container_url+'/model/model_script.py'),
                                  license='CC BY-SA')
 analysis_script.save(client) # SAVE IN KG
 print('The KG ID is:', analysis_script.id)

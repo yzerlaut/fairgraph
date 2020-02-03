@@ -42,11 +42,11 @@ class AnalysisActivity(KGObject):
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.0.1/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.0.1",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0",
     "@type": "nxv:Schema",
     "imports": [
         "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.4"
@@ -62,33 +62,28 @@ class AnalysisActivity(KGObject):
                 {
                     "property": [
                         {
-                            "minCount": 2,
-                            "path": "prov:used"
-                        },
-                        {
-                            "class": "nsg:AnalysisResult",
-                            "description": "Generated simulation result.",
+                            "datatype": "xsd:string",
+                            "description": "name of activity analysis",
                             "minCount": 1,
-                            "name": "Result",
-                            "path": "prov:generated",
-                            "seeAlso": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.0.1/shapes/AnalysisResultShape"
+                            "name": "name",
+                            "path": "schema:name"
                         }
                     ]
                 }
             ],
-            "label": "Simulation report analysis shape",
+            "label": "Analysis activity shape",
             "nodekind": "sh:BlankNodeOrIRI",
             "targetClass": "nsg:AnalysisActivity"
         }
     ],
     "links": {
         "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.0.1"
+        "self": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0"
     }
 }
     """
     namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/analysisactivity/v0.0.1"
+    _path = "/simulation/analysisactivity/v0.1.0"
     type = ["prov:Activity", "nsg:Activity", "nsg:AnalysisActivity"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -111,17 +106,45 @@ class AnalysisActivity(KGObject):
         }
     ]
     fields = (
-        Field("name", basestring, "name"),
+        Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
-        Field("input_data", KGObject, "dataUsed", required=True),
-        Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", required=True),
-        Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", required=True),
-        Field("timestamp", datetime,  "startedAtTime", required=True),
+        Field("input_data", KGObject, "dataUsed", multiple=True),
+        Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", multiple=True),
+        Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", multiple=True),
+        Field("timestamp", datetime,  "startedAtTime"),
         Field("end_timestamp",  datetime, "endedAtTime"),
-        Field("result", "analysis.AnalysisResult", "generated", required=True, multiple=True),
+        Field("result", "analysis.AnalysisResult", "generated", multiple=True),
         Field("started_by", Person, "wasAssociatedWith")
     )
 
+
+    def __init__(self,
+                 name,
+                 input_data=None,
+                 analysis_script=None,
+                 configuration_used=None,
+                 timestamp=None,
+                 result=None,
+                 end_timestamp=None,
+                 started_by=None,
+                 id=None, instance=None):
+        
+        super(AnalysisActivity, self).__init__(
+            name=name,
+            report_file=report_file,
+            variable=variable,
+            data_type=data_type,
+            description=description,
+            timestamp=timestamp,
+            started_by=started_by,
+            id=id,
+            instance=instance)
+
+        # adding provenance details to results here
+        if result:
+            result.add_provenance_from_activity(self)
+    
+    
 
 class AnalysisConfiguration(KGObject):
     """
@@ -129,11 +152,11 @@ class AnalysisConfiguration(KGObject):
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.0.1/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.0.1",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0",
     "@type": "nxv:Schema",
     "imports": [
         "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
@@ -165,59 +188,62 @@ class AnalysisConfiguration(KGObject):
     ],
     "links": {
         "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.0.1"
+        "self": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0"
     }
 }
     """
     namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/analysisconfiguration/v0.0.1"
+    _path = "/simulation/analysisconfiguration/v0.1.0"
     type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisConfiguration"]
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
-               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "distribution": "nsg:distribution"}
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
         Field("config", (Distribution, dict, basestring), "distribution")
     )
 
-    def __init__(self,
-                 name,
-                 config_file='',
-                 description='',
-                 json_description='',
-                 id=None, instance=None):
+    ## TODO : write the different cases: Distribution, dict, basestring
+    
+    # def __init__(self,
+    #              name,
+    #              config_file='',
+    #              description='',
+    #              json_description='',
+    #              id=None, instance=None):
         
-        super(AnalysisConfiguration, self).__init__(
-            name=name,
-            config_file=config_file,
-            description=description,
-            json_description=json_description,
-            id=id,
-            instance=instance)
-        self._file_to_upload = None
-        if isinstance(config_file, basestring):
-            if config_file.startswith("http"):
-                self.config_file = Distribution(location=config_file)
-            elif os.path.isfile(config_file):
-                self._file_to_upload = config_file
-                self.config_file = None
-        elif config_file is not None:
-            for rf in as_list(self.config_file):
-                assert isinstance(rf, Distribution)
+    #     super(AnalysisConfiguration, self).__init__(
+    #         name=name,
+    #         config_file=config_file,
+    #         description=description,
+    #         json_description=json_description,
+    #         id=id,
+    #         instance=instance)
+    #     self._file_to_upload = None
+    #     if isinstance(config_file, basestring):
+    #         if config_file.startswith("http"):
+    #             self.config_file = Distribution(location=config_file)
+    #         elif os.path.isfile(config_file):
+    #             self._file_to_upload = config_file
+    #             self.config_file = None
+    #     elif config_file is not None:
+    #         for rf in as_list(self.config_file):
+    #             assert isinstance(rf, Distribution)
 
-    def save(self, client):
-        super(AnalysisConfiguration, self).save(client)
-        if self._file_to_upload:
-            self.upload_attachment(self._file_to_upload, client)
+    # def save(self, client):
+    #     super(AnalysisConfiguration, self).save(client)
+    #     if self._file_to_upload:
+    #         self.upload_attachment(self._file_to_upload, client)
 
-    def upload_attachment(self, file_path, client):
-        upload_attachment(self, file_path, client)
+    # def upload_attachment(self, file_path, client):
+    #     upload_attachment(self, file_path, client)
         
-    def download(self, local_directory, client):
-        for rf in as_list(self.config_file):
-            rf.download(local_directory, client)
+    # def download(self, local_directory, client):
+    #     for rf in as_list(self.config_file):
+    #         rf.download(local_directory, client)
     
 
 class AnalysisResult(KGObject):
@@ -227,11 +253,11 @@ class AnalysisResult(KGObject):
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.0.1/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.0.1",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2",
     "@type": "nxv:Schema",
     "imports": [
         "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
@@ -263,33 +289,35 @@ class AnalysisResult(KGObject):
     ],
     "links": {
         "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.0.1"
+        "self": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2"
     }
 }
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisResult"]
-    _path = "/simulation/analysisresult/v0.0.1"
+    _path = "/simulation/analysisresult/v0.1.2"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
                "variable": "nsg:variable",
                "dataType": "nsg:dataType",
+               "distribution": "nsg:distribution",
                "prov": "http://www.w3.org/ns/prov#",
                "startedAtTime": "prov:startedAtTime",
+               "wasDerivedFrom":"prov:wasDerivedFrom",
                "wasGeneratedBy": "prov:wasGeneratedBy"}
     fields = (Field("name", basestring, "name", required=True),
-              Field("variable", basestring, "variable"),
-              Field("report_file", (Distribution, basestring), "distribution"),
-              Field("generated_by", (AnalysisActivity, basestring), "wasGeneratedBy"),
-              Field("data_type", basestring, "dataType"),
+              Field("report_file", (Distribution, basestring), "distribution", multiple=True),
+              Field("variable", basestring, "variable", multiple=True),
+              Field("data_type", basestring, "dataType", multiple=True),
+              Field("generated_by", AnalysisActivity, "wasGeneratedBy"), # SHOULD BE SET UP  BY THE ACTIVITY
+              Field("derived_from", KGObject, "wasDerivedFrom"), # SHOULD BE SET UP BY THE ACTIVITY
               Field("description", basestring, "description"),
               Field("timestamp", datetime,  "startedAtTime"))
 
     def __init__(self,
                  name,
-                 generated_by='',
                  report_file=None,
                  data_type = '',
                  variable='',
@@ -299,10 +327,9 @@ class AnalysisResult(KGObject):
         
         super(AnalysisResult, self).__init__(
             name=name,
-            generated_by=generated_by,
             report_file=report_file,
-            data_type=data_type,
             variable=variable,
+            data_type=data_type,
             description=description,
             timestamp=timestamp,
             id=id,
@@ -317,6 +344,8 @@ class AnalysisResult(KGObject):
         elif report_file is not None:
             for rf in as_list(self.report_file):
                 assert isinstance(rf, Distribution)
+        else:
+            print('/!\ Need to provide a "report_file" argument, either a string path to a file (local or public on the web) or a Distribution object')
 
     @property
     def _existence_query(self):
@@ -336,70 +365,40 @@ class AnalysisResult(KGObject):
         if self._file_to_upload:
             self.upload_attachment(self._file_to_upload, client)
 
+    def add_provenance_from_activity(self, activity):
+        """
+        provenance setting should be called within the activity construction
+        """
+        self.generated_by = activity
+        self.derived_from = activity.input_data
+            
     def upload_attachment(self, file_path, client):
         upload_attachment(self, file_path, client)
         
     def download(self, local_directory, client):
-        for rf in as_list(self.report_file):
+          for rf in as_list(self.report_file):
             rf.download(local_directory, client)
 
             
 class AnalysisScript(KGObject):
-    """ NEED TO MAKE A DEDICATED shema"""
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/emodelscript/v0.1.0"
-    type = ["prov:Entity", "nsg:EModelScript"]  # generalize to other sub-types of script
-    context =  [  # todo: root should be set by client to nexus or nexus-int or whatever as required
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "license": "schema:license"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("code_format", basestring, "code_format"),
-        Field("license", basestring, "license"),
-        Field("distribution", Distribution,  "distribution")
-    )
-
-    def __init__(self, name, code_location=None, code_format=None, license=None,
-                 distribution=None, id=None, instance=None):
-        super(AnalysisScript, self).__init__(name=name, code_format=code_format, license=license,
-                                          distribution=distribution, id=id, instance=instance)
-        if code_location and distribution:
-            raise ValueError("Cannot provide both code_location and distribution")
-        if code_location:
-            self.distribution = Distribution(location=code_location)
-
-    @property
-    def code_location(self):
-        if self.distribution:
-            return self.distribution.location
-        else:
-            return None
-
-
-
-
-class Dataset(KGObject):
     """
+    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
 {
     "@context": [
         "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
         {
-            "this": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1/shapes/"
+            "this": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0/shapes/"
         },
         "{{base}}/contexts/nexus/core/resource/v0.3.0"
     ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1",
+    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0",
     "@type": "nxv:Schema",
     "imports": [
         "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
     ],
     "shapes": [
         {
-            "@id": "this:DatasetShape",
+            "@id": "this:AnalysisScriptShape",
             "@type": "sh:NodeShape",
             "and": [
                 {
@@ -409,7 +408,7 @@ class Dataset(KGObject):
                     "property": [
                         {
                             "datatype": "xsd:string",
-                            "description": "name of dataset",
+                            "description": "name of the analysis script",
                             "minCount": 1,
                             "name": "name",
                             "path": "schema:name"
@@ -417,73 +416,97 @@ class Dataset(KGObject):
                     ]
                 }
             ],
-            "label": "Analysis Configuration shape",
+            "label": "Analysis Script shape",
             "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:Dataset"
+            "targetClass": "nsg:AnalysisScript"
         }
     ],
     "links": {
         "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/dataset/v0.0.1"
+        "self": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0"
     }
 }
     """
     namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/dataset/v0.0.1"
-    type = ["prov:Entity", "nsg:Entity", "nsg:Dataset"]
+    type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisScript"]
+    _path = "/simulation/analysisscript/v0.1.0"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
-               "contributor": "https://schema.hbp.eu/minds/contributors",
-               "url":"https://schema.hbp.eu/minds/container_url",
-               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
+               "license": "schema:license",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "distribution": "nsg:distribution",
+               "code_format": "nsg:code_format"}
     fields = (
         Field("name", basestring, "name", required=True),
-        Field("description", basestring, "description"),
-        Field("identifier", basestring, "http://schema.org/identifier"),
-        Field("contributors", Person, "contributor", multiple=True),
-        Field("container_url", basestring, "url", required=False, multiple=False)
+        Field("script_file", (Distribution, basestring), "distribution"),
+        Field("code_format", basestring, "code_format", multiple=True),
+        Field("license", basestring, "license"),
+        Field("distribution", Distribution,  "distribution")
     )
 
-    def download(self, local_directory, accept_terms_of_use=False):
-        # todo: add support for download as zip
-        # todo: check hashes
-        if not (accept_terms_of_use or self.accepted_terms_of_use):
-            if in_notebook():
-                from IPython.display import display, Markdown
-                display(Markdown(terms_of_use))
-            else:
-                print(terms_of_use)
-            user_response = raw_input("Do you accept the EBRAINS KG Terms of Service? ")
-            if user_response in ('y', 'Y', 'yes', 'YES'):
-                self.__class__.accepted_terms_of_use = True
-            else:
-                raise Exception("Please accept the terms of use before downloading the dataset")
-        response = requests.get(self.container_url + "?format=json")
-        if response.status_code != 200:
-            raise IOError(
-                "Unable to download dataset. Response code {}".format(response.status_code))
-        contents = response.json()
-        total_data_size = sum(item["bytes"] for item in contents) // 1024
-        progress_bar = tqdm(total=total_data_size)
-        for entry in contents:
-            local_path = os.path.join(local_directory, entry["name"])
-            print(local_path)
-            if entry["name"].endswith("/"):
-                os.makedirs(local_path, exist_ok=True)
-            else:
-                response2 = requests.get(self.container_url + "/" + entry["name"])
-                if response2.status_code == 200:
-                    with open(local_path, "wb") as fp:
-                        fp.write(response2.content)
-                    progress_bar.update(entry["bytes"] // 1024)
-                else:
-                    raise IOError(
-                        "Unable to download file '{}'. Response code {}".format(
-                            local_path, response2.status_code))
-        progress_bar.close()
+    def __init__(self, name,
+                 script_file=None,
+                 code_format=None,
+                 license=None,
+                 id=None,
+                 instance=None):
+        super(AnalysisScript, self).__init__(name=name,
+                                             script_file=script_file,
+                                             code_format=code_format,
+                                             license=license,
+                                             id=id,
+                                             instance=instance)
+        self._file_to_upload = None
+        if isinstance(script_file, basestring):
+            if script_file.startswith("http"):
+                self.script_file = Distribution(location=script_file)
+            elif os.path.isfile(script_file):
+                self._file_to_upload = script_file
+                self.script_file = None
+        elif script_file is not None:
+            for rf in as_list(self.script_file):
+                assert isinstance(rf, Distribution)
+        else:
+            print('/!\ Need to provide a "script_file" argument, either a string path to a file (local or public on the web) or a Distribution object')
+
+    def save(self, client):
+        super(AnalysisScript, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+            
+    @property
+    def script_location(self):
+        if self.distribution:
+            return self.distribution.location
+        else:
+            print('script attached to the KG entry, use the "download" method to fetch it')
+            return None
+
+    def download(self, local_directory, client):
+        for rf in as_list(self.script_file):
+            rf.download(local_directory, client)
 
 
+########################################################################
+### ------ end of class definitions -------------------------------- ###
+########################################################################
+
+
+def provenance_tracking_of_result(analysis_result,
+                                  with_activities=True):
+
+    Provenance_loop_continues = True
+    GENERATING_ENTITIES_BY_LAYER = [analysis_result]
+    while Provenance_loop_continues:
+
+        if with_activities:
+
+        else:
+            GENERATING_ENTITIES_BY_LAYER.append([])
+            for quant in GENERATING_ENTITIES_BY_LAYER[-1]:
+                GENERATING_ENTITIES_BY_LAYER += as_list(quant.derived_from)
+            
         
 def list_kg_classes():
     """List all KG classes defined in this module"""
