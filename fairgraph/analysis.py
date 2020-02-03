@@ -36,7 +36,7 @@ Age = core.Age
 
 
 class AnalysisActivity(KGObject):
-    """  Here this is the Simulation *Activity*
+    """  Here this is the Analysis *Activity*
     Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
 {
     "@context": [
