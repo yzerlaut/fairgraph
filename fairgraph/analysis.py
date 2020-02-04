@@ -118,8 +118,8 @@ class AnalysisActivity(KGObject):
     )
 
 
-    def __init__(self,
-                 name,
+    def __init__(self, name,
+                 description='',
                  input_data=None,
                  analysis_script=None,
                  configuration_used=None,
@@ -131,11 +131,12 @@ class AnalysisActivity(KGObject):
         
         super(AnalysisActivity, self).__init__(
             name=name,
-            report_file=report_file,
-            variable=variable,
-            data_type=data_type,
             description=description,
+            input_data=input_data,
+            analysis_script=analysis_script,
+            configuration_used=configuration_used,
             timestamp=timestamp,
+            end_timestamp=end_timestamp,
             started_by=started_by,
             id=id,
             instance=instance)
@@ -308,29 +309,29 @@ class AnalysisResult(KGObject):
                "wasDerivedFrom":"prov:wasDerivedFrom",
                "wasGeneratedBy": "prov:wasGeneratedBy"}
     fields = (Field("name", basestring, "name", required=True),
+              Field("description", basestring, "description"),
               Field("report_file", (Distribution, basestring), "distribution", multiple=True),
               Field("variable", basestring, "variable", multiple=True),
               Field("data_type", basestring, "dataType", multiple=True),
               Field("generated_by", AnalysisActivity, "wasGeneratedBy"), # SHOULD BE SET UP  BY THE ACTIVITY
               Field("derived_from", KGObject, "wasDerivedFrom"), # SHOULD BE SET UP BY THE ACTIVITY
-              Field("description", basestring, "description"),
               Field("timestamp", datetime,  "startedAtTime"))
 
     def __init__(self,
                  name,
-                 report_file=None,
-                 data_type = '',
-                 variable='',
                  description='',
+                 report_file=None,
+                 variable='',
+                 data_type = '',
                  timestamp=None,
                  id=None, instance=None):
-        
+
         super(AnalysisResult, self).__init__(
             name=name,
+            description=description,
             report_file=report_file,
             variable=variable,
             data_type=data_type,
-            description=description,
             timestamp=timestamp,
             id=id,
             instance=instance)
@@ -498,14 +499,14 @@ def provenance_tracking_of_result(analysis_result,
 
     Provenance_loop_continues = True
     GENERATING_ENTITIES_BY_LAYER = [analysis_result]
-    while Provenance_loop_continues:
+    # while Provenance_loop_continues:
 
-        if with_activities:
+    #     if with_activities:
 
-        else:
-            GENERATING_ENTITIES_BY_LAYER.append([])
-            for quant in GENERATING_ENTITIES_BY_LAYER[-1]:
-                GENERATING_ENTITIES_BY_LAYER += as_list(quant.derived_from)
+    #     else:
+    #         GENERATING_ENTITIES_BY_LAYER.append([])
+    #         for quant in GENERATING_ENTITIES_BY_LAYER[-1]:
+    #             GENERATING_ENTITIES_BY_LAYER += as_list(quant.derived_from)
             
         
 def list_kg_classes():

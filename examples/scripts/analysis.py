@@ -4,7 +4,7 @@ from datetime import datetime
 from fairgraph import brainsimulation, KGClient, base, uniminds
 from fairgraph.analysis import AnalysisActivity, AnalysisScript, AnalysisConfiguration, AnalysisResult, Person
 # needs to have HBP_AUTH_TOKEN set as a bash variable
-dev = True
+dev = False
 if dev:
     client = KGClient(os.environ["HBP_AUTH_TOKEN"],
                       nexus_endpoint='https://nexus-int.humanbrainproject.org/v0')
@@ -28,19 +28,19 @@ if not os.path.isfile('model_script.py'):
 ## --> starting with script metadata underlying the model
 analysis_script = AnalysisScript(name='Script for Toy analysis#%s of network dynamics for demo purpose' % str(datetime.now),
                                  code_format='python',
-                                 script=base.Distribution(container_url+'/model/model_script.py'),
+                                 script_file=base.Distribution(container_url+'/model/model_script.py'),
                                  license='CC BY-SA')
 analysis_script.save(client) # SAVE IN KG
 print('The KG ID is:', analysis_script.id)
 
 
 ## --> parameters/configuration
-from types import SimpleNamespace
-args = SimpleNamespace(dt=1e-4, tstop=1., seed=0,
-                       freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
-                       N_recVm=2, N_show=2)
+
+args = dict(dt=1e-4, tstop=1., seed=0,
+            freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
+            N_recVm=2, N_show=2)
 analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
-                                        json_description=''.join(['%s=%s ; ' % kv for kv in vars(args).items()]),
+                                        config=args,
                                         config_file=base.Distribution(container_url+'/model/model_script.py'))
 analysis_config.save(client)
 print('The KG ID is:', analysis_config.id)
@@ -73,7 +73,7 @@ sim = AnalysisActivity(name='parameter configuration of toy analysis#%s in demo 
                        timestamp=datetime.now(),
                        result = analysis_result,
                        started_by = yann,
-                       ended_at_time=datetime.now())
+                       end_timestamp=datetime.now())
 
 sim.save(client)
 print('The KG ID is:', sim.id)
