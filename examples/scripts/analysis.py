@@ -4,12 +4,7 @@ from datetime import datetime
 from fairgraph import brainsimulation, KGClient, base, uniminds
 from fairgraph.analysis import AnalysisActivity, AnalysisScript, AnalysisConfiguration, AnalysisResult, Person
 # needs to have HBP_AUTH_TOKEN set as a bash variable
-dev = False
-if dev:
-    client = KGClient(os.environ["HBP_AUTH_TOKEN"],
-                      nexus_endpoint='https://nexus-int.humanbrainproject.org/v0')
-else:
-    client = KGClient(os.environ["HBP_AUTH_TOKEN"])
+client = KGClient(os.environ["HBP_AUTH_TOKEN"])
 
 
 ###############################################
