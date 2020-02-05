@@ -1,4 +1,4 @@
-import os, time
+import os, time, sys, hashlib
 from datetime import datetime
 
 from fairgraph import brainsimulation, KGClient, base, uniminds
@@ -7,69 +7,139 @@ from fairgraph.analysis import AnalysisActivity, AnalysisScript, AnalysisConfigu
 client = KGClient(os.environ["HBP_AUTH_TOKEN"])
 
 
-###############################################
-### Downloading the (toy) Model of the demo ###
-###############################################
+if sys.argv[-1]=='Fetch':
 
-# The model source code is available in a public container at CSCS
-container_url = 'https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo'
-if not os.path.isfile('model_script.py'):
-    os.system('wget https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo/model/model_script.py')
+    analysis = AnalysisActivity.by_name('parameter configuration of toy analysis in demo notebook', client)
 
-###############################################
-### Documenting Analysis Metadata ################
-###############################################
+    # data = uniminds.Dataset.list(client, size=20)[-1]
+    # print(data)
+    # analysis_config = AnalysisConfiguration.by_name('parameter configuration of toy analysis in demo notebook', client)
+    # analysis_config.download('./', client)
+    # print(analysis_config.config_file)
 
-## --> starting with script metadata underlying the model
-analysis_script = AnalysisScript(name='Script for Toy analysis#%s of network dynamics for demo purpose' % str(datetime.now),
-                                 code_format='python',
-                                 script_file=base.Distribution(container_url+'/model/model_script.py'),
-                                 license='CC BY-SA')
-analysis_script.save(client) # SAVE IN KG
-print('The KG ID is:', analysis_script.id)
+elif sys.argv[-1]=='Fetch-Pipeline':
 
+    result = AnalysisResult.by_name('Result 2', client)
+    print(result)
+    
+    def provenance_tracking_of_result(analysis_result,
+                                      with_activities=True):
+        """
+        """
+        Provenance_loop_continues = True
+        GENERATING_ENTITIES_BY_LAYER = [[analysis_result]]
+        
+        while Provenance_loop_continues:
 
-## --> parameters/configuration
+            GENERATING_ENTITIES_BY_LAYER.append([])
+            print(GENERATING_ENTITIES_BY_LAYER)
+            for entity in GENERATING_ENTITIES_BY_LAYER[-2]:
+                print(entity.derived_from.resolve(client))
+                if entity is not None:
+                    Entity = entity.derived_from.resolve(client)
+                    print(Entity)
+            Provenance_loop_continues = False
+            #     if Entity is not None:
+            #         GENERATING_ENTITIES_BY_LAYER += base.as_list(entity.derived_from).derived_from.resolve(client)
+            # if len(GENERATING_ENTITIES_BY_LAYER[-1])==0:
+            #     Provenance_loop_continues = False
+        return GENERATING_ENTITIES_BY_LAYER
+    
+    GENERATING_ENTITIES_BY_LAYER = provenance_tracking_of_result(result)
 
-args = dict(dt=1e-4, tstop=1., seed=0,
-            freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
-            N_recVm=2, N_show=2)
-analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
-                                        config=args,
-                                        config_file=base.Distribution(container_url+'/model/model_script.py'))
-analysis_config.save(client)
-print('The KG ID is:', analysis_config.id)
+    
+                                  
+elif sys.argv[-1]=='Pipeline':
+    ## --> agent
+    yann = Person(family_name='Zerlaut', given_name='Yann', email='yann.zerlaut@cnrs.fr')
+    yann.save(client)
+    data = uniminds.Dataset.list(client, size=20)[0]
+    PREVIOUS_DATA = None
+    for i in range(3):
+        analysis_script = AnalysisScript(name='Script %i' % i, code_format='python', license='CC BY-SA', script_file='analysis.py')
+        analysis_config = AnalysisConfiguration(name='parameter configuration %i' % i, config_file='config_file.json')
+        analysis_result = AnalysisResult(name='Result %i' % i, report_file='empty_data.dat', data_type = 'empty data', variable='Null')
+        analysis = AnalysisActivity(name='Analysis %i' % i, description='',
+                                    input_data= PREVIOUS_DATA,
+                                    configuration_used=analysis_config,
+                                    analysis_script=analysis_script,
+                                    timestamp=datetime.now(),
+                                    result = analysis_result,
+                                    started_by = yann)
+        # PREVIOUS_DATA.append(analysis_result)
+        for obj in [analysis_script, analysis_config, analysis_result, analysis]:
+            obj.save(client) # need to save after the activity is built to have the procedure executed (setting provenance of results)
+        PREVIOUS_DATA = analysis_result
 
-## --> result
+else:
+    # we write an entry
+        
+    ###############################################
+    ### Downloading the dataset metadata ##########
+    ###############################################
+    data = uniminds.Dataset.list(client, size=20)[0]
 
-# for small files, we can store them directly on the knowledge graph
-analysis_result = AnalysisResult(name='spike results of toy analysis#%s in demo notebook'  % str(datetime.now),
-                                                report_file='spike_long_run.npz',
-                                                data_type = 'network activity data', 
-                                                variable='spike',
-                                                description='Spiking results of toy analysis#%s run in demo notebook'  % str(datetime.now))
-analysis_result.save(client)
-print('The KG ID is:', analysis_result.id)
+    # The model source code is available in a public container at CSCS
+    container_url = 'https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo'
+    if not os.path.isfile('model_script.py'):
+        os.system('wget https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo/model/model_script.py')
 
+    ###############################################
+    ### Documenting Analysis Metadata ################
+    ###############################################
 
-## --> agent
-yann = Person(family_name='Zerlaut',
-              given_name='Yann',
-              email='yann.zerlaut@cnrs.fr')
-yann.save(client)
-print('The KG ID is:', yann.id)
+    ## --> starting with script metadata underlying the model
+    analysis_script = AnalysisScript(name='Script for Toy analysis#%s of network dynamics for demo purpose' % str(datetime.now),
+                                     code_format='python',
+                                     script_file=base.Distribution(container_url+'/model/model_script.py'),
+                                     license='CC BY-SA')
 
+    ## --> parameters/configuration
+    import json
+    parameters = dict(dt=1e-4, tstop=1., seed=0,
+                      freq=10., E_rest=-70., V_thresh=-50., V_peak=-50., N_pops=[80,20],
+                      N_recVm=2, N_show=2)
 
-## --> activity
-sim = AnalysisActivity(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
-                       description='',
-                       configuration_used=analysis_config,
-                       analysis_script=analysis_script,
-                       timestamp=datetime.now(),
-                       result = analysis_result,
-                       started_by = yann,
-                       end_timestamp=datetime.now())
+    with open('config_file.json', 'w') as fp:
+        json.dump(parameters, fp)
+    # analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now),
+    analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis in demo notebook',
+                                            config_file='config_file.json')
 
-sim.save(client)
-print('The KG ID is:', sim.id)
+    ## --> result
+
+    # for small files, we can store them directly on the knowledge graph
+    name = 'spike results of toy analysis#%s in demo notebook'  % str(datetime.now)
+    analysis_result = AnalysisResult(name=name, identifier=hashlib.sha1("{}".format(name).encode('utf-8')).hexdigest(),
+                                     report_file='spike_long_run.npz',
+                                     data_type = 'network activity data', 
+                                     variable='spike',
+                                     description='Spiking results of toy analysis#%s run in demo notebook'  % str(datetime.now))
+
+    ## --> agentb
+    yann = Person(family_name='Zerlaut',
+                  given_name='Yann',
+                  email='yann.zerlaut@cnrs.fr')
+    yann.save(client)
+    print('The KG ID is:', yann.id)
+
+    ## --> activity
+    name='parameter configuration of toy analysis#%s in demo notebook'  % str(datetime.now)
+    analysis = AnalysisActivity(name=name, identifier=hashlib.sha1("{}".format(name).encode('utf-8')).hexdigest(),
+                                description='',
+                                input_data=data,
+                                configuration_used=analysis_config,
+                                analysis_script=analysis_script,
+                                timestamp=datetime.now(),
+                                result = analysis_result,
+                                started_by = yann,
+                                end_timestamp=datetime.now())
+
+    # analysis_result.generated_by = [analysis]
+    # # analysis_result.add_provenance_from_activity(analysis, client)
+    # print(analysis_result.generated_by)
+    
+    for obj in [analysis_script, analysis_config, analysis_result, analysis]:
+        obj.save(client) # need to save after the activity is built to have the procedure executed (setting provenance of results)
+        print('The KG ID is:', obj.id)
 

@@ -92,6 +92,7 @@ class AnalysisActivity(KGObject):
             "schema": "http://schema.org/",
             "name": "schema:name",
             "description": "schema:description",
+            "identifier": "schema:identifier",
             "prov": "http://www.w3.org/ns/prov#",
             "generated": "prov:generated",
             "used": "prov:used",
@@ -108,6 +109,7 @@ class AnalysisActivity(KGObject):
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
+        Field("identifier", basestring, "identifier"),
         Field("input_data", KGObject, "dataUsed", multiple=True),
         Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", multiple=True),
         Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", multiple=True),
@@ -118,33 +120,31 @@ class AnalysisActivity(KGObject):
     )
 
 
-    def __init__(self, name,
-                 description='',
-                 input_data=None,
-                 analysis_script=None,
-                 configuration_used=None,
-                 timestamp=None,
-                 result=None,
-                 end_timestamp=None,
-                 started_by=None,
-                 id=None, instance=None):
+    # def __init__(self, name,
+    #              description='',
+    #              identifier='',
+    #              input_data=None,
+    #              analysis_script=None,
+    #              configuration_used=None,
+    #              timestamp=None,
+    #              result=None,
+    #              end_timestamp=None,
+    #              started_by=None,
+    #              id=None, instance=None):
         
-        super(AnalysisActivity, self).__init__(
-            name=name,
-            description=description,
-            input_data=input_data,
-            analysis_script=analysis_script,
-            configuration_used=configuration_used,
-            timestamp=timestamp,
-            end_timestamp=end_timestamp,
-            started_by=started_by,
-            id=id,
-            instance=instance)
+    #     super(AnalysisActivity, self).__init__(
+    #         name=name,
+    #         description=description,
+    #         identifier=identifier,
+    #         input_data=input_data,
+    #         analysis_script=analysis_script,
+    #         configuration_used=configuration_used,
+    #         timestamp=timestamp,
+    #         end_timestamp=end_timestamp,
+    #         started_by=started_by,
+    #         id=id,
+    #         instance=instance)
 
-        # adding provenance details to results here
-        if result:
-            result.add_provenance_from_activity(self)
-    
     
 
 class AnalysisConfiguration(KGObject):
@@ -204,47 +204,45 @@ class AnalysisConfiguration(KGObject):
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
-        Field("config", (Distribution, dict, basestring), "distribution")
+        Field("config_file", (Distribution, basestring), "distribution")
     )
 
     ## TODO : write the different cases: Distribution, dict, basestring
     
-    # def __init__(self,
-    #              name,
-    #              config_file='',
-    #              description='',
-    #              json_description='',
-    #              id=None, instance=None):
+    def __init__(self,
+                 name,
+                 description='',
+                 config_file=None,
+                 id=None, instance=None):
         
-    #     super(AnalysisConfiguration, self).__init__(
-    #         name=name,
-    #         config_file=config_file,
-    #         description=description,
-    #         json_description=json_description,
-    #         id=id,
-    #         instance=instance)
-    #     self._file_to_upload = None
-    #     if isinstance(config_file, basestring):
-    #         if config_file.startswith("http"):
-    #             self.config_file = Distribution(location=config_file)
-    #         elif os.path.isfile(config_file):
-    #             self._file_to_upload = config_file
-    #             self.config_file = None
-    #     elif config_file is not None:
-    #         for rf in as_list(self.config_file):
-    #             assert isinstance(rf, Distribution)
+        super(AnalysisConfiguration, self).__init__(
+            name=name,
+            description=description,
+            config_file=config_file,
+            id=id,
+            instance=instance)
+        self._file_to_upload = None
+        if isinstance(config_file, basestring):
+            if config_file.startswith("http"):
+                self.config_file = Distribution(location=config_file)
+            elif os.path.isfile(config_file):
+                self._file_to_upload = config_file
+                self.config_file = None
+        elif config_file is not None:
+            for rf in as_list(self.config_file):
+                assert isinstance(rf, Distribution)
 
-    # def save(self, client):
-    #     super(AnalysisConfiguration, self).save(client)
-    #     if self._file_to_upload:
-    #         self.upload_attachment(self._file_to_upload, client)
-
-    # def upload_attachment(self, file_path, client):
-    #     upload_attachment(self, file_path, client)
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
         
-    # def download(self, local_directory, client):
-    #     for rf in as_list(self.config_file):
-    #         rf.download(local_directory, client)
+    def save(self, client):
+        super(AnalysisConfiguration, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+
+    def download(self, local_directory, client):
+        for rf in as_list(self.config_file):
+            rf.download(local_directory, client)
     
 
 class AnalysisResult(KGObject):
@@ -300,6 +298,7 @@ class AnalysisResult(KGObject):
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
+               "identifier": "schema:identifier",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
                "variable": "nsg:variable",
                "dataType": "nsg:dataType",
@@ -310,28 +309,35 @@ class AnalysisResult(KGObject):
                "wasGeneratedBy": "prov:wasGeneratedBy"}
     fields = (Field("name", basestring, "name", required=True),
               Field("description", basestring, "description"),
+              Field("identifier", basestring, "identifier"),
               Field("report_file", (Distribution, basestring), "distribution", multiple=True),
               Field("variable", basestring, "variable", multiple=True),
               Field("data_type", basestring, "dataType", multiple=True),
-              Field("generated_by", AnalysisActivity, "wasGeneratedBy"), # SHOULD BE SET UP  BY THE ACTIVITY
-              Field("derived_from", KGObject, "wasDerivedFrom"), # SHOULD BE SET UP BY THE ACTIVITY
+              Field("generated_by", AnalysisActivity, "wasGeneratedBy", multiple=True), # SHOULD BE SET UP  BY THE ACTIVITY
+              Field("derived_from", KGObject, "wasDerivedFrom", multiple=True), # SHOULD BE SET UP BY THE ACTIVITY
               Field("timestamp", datetime,  "startedAtTime"))
 
     def __init__(self,
                  name,
                  description='',
+                 identifier='',
                  report_file=None,
                  variable='',
                  data_type = '',
+                 generated_by=None,
+                 derived_from=None,
                  timestamp=None,
                  id=None, instance=None):
 
         super(AnalysisResult, self).__init__(
             name=name,
             description=description,
+            identifier=identifier,
             report_file=report_file,
             variable=variable,
             data_type=data_type,
+            generated_by=generated_by,
+            derived_from=derived_from,
             timestamp=timestamp,
             id=id,
             instance=instance)
@@ -366,12 +372,12 @@ class AnalysisResult(KGObject):
         if self._file_to_upload:
             self.upload_attachment(self._file_to_upload, client)
 
-    def add_provenance_from_activity(self, activity):
+    def add_provenance_from_activity(self, activity, client):
         """
         provenance setting should be called within the activity construction
         """
-        self.generated_by = activity
-        self.derived_from = activity.input_data
+        self.generated_by = activity.resolve(client)
+        # self.derived_from = activity.input_data #.resolve(client)
             
     def upload_attachment(self, file_path, client):
         upload_attachment(self, file_path, client)
@@ -484,6 +490,9 @@ class AnalysisScript(KGObject):
             print('script attached to the KG entry, use the "download" method to fetch it')
             return None
 
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
     def download(self, local_directory, client):
         for rf in as_list(self.script_file):
             rf.download(local_directory, client)
