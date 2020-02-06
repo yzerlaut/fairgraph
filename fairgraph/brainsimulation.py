@@ -424,295 +424,7 @@ class EModel(ModelInstance):
         args.pop("self")
         KGObject.__init__(self, **args)
 
-        
-class ValidationTestDefinition(KGObject, HasAliasMixin):
-    """docstring"""
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/validationtestdefinition/v0.1.0"
-    #path = DEFAULT_NAMESPACE + "/simulation/validationtestdefinition/v0.1.2"
-    type = ["prov:Entity", "nsg:ValidationTestDefinition"]
-    context = [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "name": "schema:name",
-            "alias": "nsg:alias",
-            "author": "schema:author",
-            "brainRegion": "nsg:brainRegion",
-            "species": "nsg:species",
-            "celltype": "nsg:celltype",
-            "abstractionLevel": "nsg:abstractionLevel",
-            "description": "schema:description",
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-            "prov": "http://www.w3.org/ns/prov#",
-            "schema": "http://schema.org/",
-            "dateCreated": "schema:dateCreated",
-            "testType": "nsg:testType",
-            "referenceData": "nsg:referenceData",
-            "dataType": "nsg:dataType",
-            "recordingModality": "nsg:recordingModality",
-            "status": "nsg:status",
-            "scoreType": "nsg:scoreType",
-            "oldUUID": "nsg:providerId"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("authors", Person, "author", multiple=True, required=True),
-        Field("description", basestring, "description", required=False),
-        Field("date_created", (date, datetime), "dateCreated", required=True),
-        Field("alias", basestring, "alias"),
-        Field("brain_region", BrainRegion, "brainRegion", multiple=True),
-        Field("species", Species, "species"),
-        Field("celltype", CellType, "celltype", multiple=True),
-        Field("test_type", basestring, "testType"),
-        Field("age", Age, "age"),
-        Field("reference_data", KGObject, "referenceData"),
-        Field("data_type", basestring, "dataType"),
-        Field("recording_modality", basestring, "recordingModality"),
-        Field("score_type", basestring, "scoreType"),
-        Field("status", basestring, "status"),
-        Field("old_uuid", basestring, "oldUUID")
-    )
-
-    @property
-    def scripts(self):
-        query = {
-            "path": "nsg:implements",
-            "op": "eq",
-            "value": self.id
-        }
-        context = {
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"
-        }
-        return KGQuery(ValidationScript, query, context)
-
-
-class ValidationScript(KGObject):  # or ValidationImplementation
-    """docstring"""
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/validationscript/v0.1.0"
-    type = ["prov:Entity", "nsg:ModelValidationScript"]
-    context = [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "name": "schema:name",
-            "description": "schema:description",
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-            "prov": "http://www.w3.org/ns/prov#",
-            "schema": "http://schema.org/",
-            "dateCreated": "schema:dateCreated",
-            "repository": "schema:codeRepository",
-            "version": "schema:version",
-            "parameters": "nsg:parameters",
-            "path": "nsg:path",
-            "implements": "nsg:implements",
-            "oldUUID": "nsg:providerId"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("date_created", (date, datetime), "dateCreated", required=True),
-        Field("repository", IRI, "repository"),
-        Field("version", basestring, "version"),
-        Field("description", basestring, "description"),
-        Field("parameters", basestring, "parameters"),
-        Field("test_definition", ValidationTestDefinition, "implements"),
-        Field("old_uuid", basestring, "oldUUID")
-    )
-
-
-class ValidationResult(KGObject):
-    """docstring"""
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/validationresult/v0.1.0"
-    #path = DEFAULT_NAMESPACE + "/simulation/validationresult/v0.1.1"
-    type = ["prov:Entity", "nsg:ValidationResult"]
-    context = [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "name": "schema:name",
-            "description": "schema:description",
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-            "prov": "http://www.w3.org/ns/prov#",
-            "schema": "http://schema.org/",
-            "dateCreated": "schema:dateCreated",
-            "score": "nsg:score",
-            "normalizedScore": "nsg:normalizedScore",
-            "passed": "nsg:passedValidation",
-            "wasGeneratedBy": "prov:wasGeneratedBy",
-            "hadMember": "prov:hadMember",
-            "collabID": "nsg:collabID",
-            "oldUUID": "nsg:providerId",
-            "hash": "nsg:digest"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("generated_by", "brainsimulation.ValidationActivity", "wasGeneratedBy"),
-        Field("description", basestring, "description"),
-        Field("score", (float, int), "score"),
-        Field("normalized_score", (float, int), "normalizedScore"),
-        Field("passed", bool, "passedValidation"),
-        Field("timestamp", (date, datetime), "dateCreated"),
-        Field("additional_data", KGObject, "hadMember", multiple=True),
-        Field("old_uuid", basestring, "oldUUID"),
-        Field("collab_id", (int, basestring), "collabID"),
-        Field("hash", basestring, "hash")
-    )
-
-
-class ValidationActivity(KGObject):
-    """
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1"
-    ],
-    "shapes": [
-        {
-            "@id": "this:ModelValidationShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1/ActivityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "minCount": 3,
-                            "path": "prov:used"
-                        },
-                        {
-                            "class": "nsg:ValidationResult",
-                            "description": "Generated validation result.",
-                            "minCount": 1,
-                            "name": "Result",
-                            "path": "prov:generated",
-                            "seeAlso": "{{base}}/schemas/neurosciencegraph/simulation/validationresult/v0.1.0/shapes/ValidationResultShape"
-                        }
-                    ]
-                }
-            ],
-            "comment": "The analysis strategy/protocol is defined in a protocol.",
-            "label": "Model or simulation report analysis shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:ModelValidation"
-        }
-    ],
-    "nxv:rev": 2,
-    "nxv:published": true,
-    "nxv:deprecated": false,
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/modelvalidation/v0.2.0"
-    }
-}    
-    """
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/modelvalidation/v0.2.0"  # only present in nexus-int
-    type = ["prov:Activity", "nsg:ModelValidation"]
-    context = [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "name": "schema:name",
-            "description": "schema:description",
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-            "prov": "http://www.w3.org/ns/prov#",
-            "schema": "http://schema.org/",
-            "generated": "prov:generated",
-            "used": "prov:used",
-            "modelUsed": "prov:used",
-            "testUsed": "prov:used",
-            "dataUsed": "prov:used",
-            "startedAtTime": "prov:startedAtTime",
-            "endedAtTime": "prov:endedAtTime",
-            "wasAssociatedWith": "prov:wasAssociatedWith",
-            "referenceData": "nsg:referenceData"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name"),
-        Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
-        Field("test_script", ValidationScript, "testUsed", required=True),
-        Field("reference_data", Collection, "dataUsed", required=True),
-        Field("timestamp", datetime,  "startedAtTime", required=True),
-        Field("result", ValidationResult, "generated", required=True),
-        Field("started_by", Person, "wasAssociatedWith"),
-        Field("end_timestamp",  datetime, "endedAtTime")
-    )
-
-    @property
-    def _existence_query(self):
-        # to fix: need an _and_ on model_instance, test_script, reference_data and timestamp
-        return {
-            "path": "prov:startedAtTime",
-            "op": "eq",
-            "value": self.timestamp.isoformat()
-        }
-
-    @property
-    def duration(self):
-        if self.end_timestamp:
-            return self.end_timestamp - self.start_timestamp
-        else:
-            return 0.0
-
-    @classmethod
-    @cache
-    def from_kg_instance(cls, instance, client, resolved=False):
-        D = instance.data
-        if resolved:
-            D = cls._fix_keys(D)
-        for otype in cls.type:
-            if otype not in D["@type"]:
-                # todo: profile - move compaction outside loop?
-                compacted_types = compact_uri(D["@type"], standard_context)
-                if otype not in compacted_types:
-                    print("Warning: type mismatch {} - {}".format(otype, compacted_types))
-        def filter_by_kg_type(items, type_name):
-            filtered_items = []
-            for item in as_list(items):
-                if type_name in item["@type"] or type_name in compact_uri(item["@type"], standard_context):
-                    filtered_items.append(item)
-            return filtered_items
-        try:
-            model_instance = filter_by_kg_type(D["modelUsed"], "nsg:ModelInstance")[0]
-        except KeyError:
-            model_instance = filter_by_kg_type(D["used"], "nsg:ModelInstance")[0]
-        try:
-            reference_data = filter_by_kg_type(D["dataUsed"], "nsg:Collection")[0]
-        except KeyError:
-            reference_data = filter_by_kg_type(D["used"], "nsg:Collection")[0]
-        try:
-            test_script = filter_by_kg_type(D["testUsed"], "nsg:ModelValidationScript")[0]
-        except KeyError:
-            test_script = filter_by_kg_type(D["used"], "nsg:ModelValidationScript")[0]
-        end_timestamp = D.get("endedAtTime")
-        if end_timestamp:
-            end_timestamp = date_parser.parse(end_timestamp)
-        obj = cls(model_instance=build_kg_object(None, model_instance),
-                  test_script=build_kg_object(ValidationScript, test_script),
-                  reference_data=build_kg_object(None, reference_data),
-                  timestamp=date_parser.parse(D.get("startedAtTime")),
-                  result=build_kg_object(ValidationResult, D.get("generated")),
-                  started_by=build_kg_object(Person, D.get("wasAssociatedWith")),
-                  end_timestamp=end_timestamp,
-                  id=D["@id"],
-                  instance=instance)
-        return obj
-
+    
 
 class VariableReport(KGObject):
     """docstring"""
@@ -802,56 +514,7 @@ class VariableReport(KGObject):
 
 
 class SimulationActivity(KGObject):
-    """  Here this is the Simulation *Activity*
-    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.4"
-    ],
-    "shapes": [
-        {
-            "@id": "this:SimulationActivityShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1/ActivityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "minCount": 2,
-                            "path": "prov:used"
-                        },
-                        {
-                            "class": "nsg:SimulationResult",
-                            "description": "Generated simulation result.",
-                            "minCount": 1,
-                            "name": "Result",
-                            "path": "prov:generated",
-                            "seeAlso": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4/shapes/SimulationResultShape"
-                        }
-                    ]
-                }
-            ],
-            "label": "Simulation report analysis shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:SimulationActivity"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/simulationactivity/v0.0.4"
-    }
-}
+    """
     """
     namespace = DEFAULT_NAMESPACE
     _path = "/simulation/simulationactivity/v0.0.4"
@@ -879,11 +542,11 @@ class SimulationActivity(KGObject):
     fields = (
         Field("name", basestring, "name"),
         Field("description", basestring, "description"),
-        Field("model_instance", (ModelInstance, MEModel), "modelUsed", required=True),
-        Field("simulation_script", "brainsimulation.ModelScript", "simUsed", required=True),
-        Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", required=True),
+        Field("model_instance", (ModelInstance, MEModel), "modelUsed", multiple=True),
+        Field("simulation_script", "brainsimulation.SimulationScript", "simUsed", multiple=True),
+        Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", multiple=True),
         Field("timestamp", datetime,  "startedAtTime", required=True),
-        Field("result", "brainsimulation.SimulationResult", "generated", required=True, multiple=True),
+        Field("result", "brainsimulation.SimulationResult", "generated", multiple=True),
         Field("started_by", Person, "wasAssociatedWith"),
         Field("end_timestamp",  datetime, "endedAtTime")
     )
@@ -892,49 +555,6 @@ class SimulationActivity(KGObject):
 
 class SimulationConfiguration(KGObject):
     """
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:SimulationConfigurationShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of config",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Simulation Configuration shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:SimulationConfiguration"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/simulationconfiguration/v0.0.2"
-    }
-}
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationConfiguration"]
@@ -990,50 +610,6 @@ class SimulationConfiguration(KGObject):
             
 class SimulationResult(KGObject):
     """
-    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:SimulationResultShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of the simulation result",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Simulation Result shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:SimulationResult"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/simulationresult/v0.0.4"
-    }
-}
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationResult"]
@@ -1128,7 +704,74 @@ class SimulationResult(KGObject):
         for rf in as_list(self.report_file):
             rf.download(local_directory, client)
 
-class SimulationScript(KGObject):  # or ValidationImplementation
+class AnalysisScript(KGObject):
+    """
+    """
+    namespace = DEFAULT_NAMESPACE
+    type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisScript"]
+    _path = "/simulation/analysisscript/v0.1.0"
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "description": "schema:description",
+               "license": "schema:license",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "distribution": "nsg:distribution",
+               "code_format": "nsg:code_format"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("script_file", (Distribution, basestring), "distribution"),
+        Field("code_format", basestring, "code_format", multiple=True),
+        Field("license", basestring, "license"),
+        Field("distribution", Distribution,  "distribution")
+    )
+
+    def __init__(self, name,
+                 script_file=None,
+                 code_format=None,
+                 license=None,
+                 id=None,
+                 instance=None):
+        super(AnalysisScript, self).__init__(name=name,
+                                             script_file=script_file,
+                                             code_format=code_format,
+                                             license=license,
+                                             id=id,
+                                             instance=instance)
+        self._file_to_upload = None
+        if isinstance(script_file, basestring):
+            if script_file.startswith("http"):
+                self.script_file = Distribution(location=script_file)
+            elif os.path.isfile(script_file):
+                self._file_to_upload = script_file
+                self.script_file = None
+        elif script_file is not None:
+            for rf in as_list(self.script_file):
+                assert isinstance(rf, Distribution)
+        else:
+            print('/!\ Need to provide a "script_file" argument, either a string path to a file (local or public on the web) or a Distribution object')
+
+    def save(self, client):
+        super(AnalysisScript, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+            
+    @property
+    def script_location(self):
+        if self.distribution:
+            return self.distribution.location
+        else:
+            print('script attached to the KG entry, use the "download" method to fetch it')
+            return None
+
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
+    def download(self, local_directory, client):
+        for rf in as_list(self.script_file):
+            rf.download(local_directory, client)
+
+
+class ValidationScript(KGObject):  # or ValidationImplementation
     """docstring"""
     namespace = DEFAULT_NAMESPACE
     _path = "/simulation/validationscript/v0.1.0"
