@@ -260,7 +260,7 @@ class ModelInstance(KGObject):
         Field("brain_region", BrainRegion, "brainRegion", required=False),
         Field("species", Species, "species", required=False),
         Field("model_of", (CellType, BrainRegion), "modelOf", required=False),  # should be True, but causes problems for a couple of cases at the moment
-        Field("main_script", "brainsimulation.ModelScript", "mainModelScript", required=True),
+        Field("main_script", "brainsimulation.ModelScript", "mainModelScript"),
         Field("release", basestring, "release", required=False),
         Field("version",  basestring, "version", required=True),
         Field("timestamp", datetime, "generatedAtTime", required=False),
@@ -270,7 +270,7 @@ class ModelInstance(KGObject):
         Field("old_uuid", basestring, "oldUUID")
     )
 
-    def __init__(self, name, main_script, version, timestamp=None,
+    def __init__(self, name, main_script=None, version='', timestamp=None,
                  brain_region=None, species=None, model_of=None, release=None,
                  part_of=None, description=None, parameters=None,
                  old_uuid=None, id=None, instance=None):
@@ -517,7 +517,7 @@ class SimulationActivity(KGObject):
     """
     """
     namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/simulationactivity/v0.0.4"
+    _path = "/simulation/simulationactivity/v0.1.0"
     type = ["prov:Activity", "nsg:SimulationActivity"]
     context = [
         "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
@@ -525,12 +525,15 @@ class SimulationActivity(KGObject):
         {
             "schema": "http://schema.org/",
             "name": "schema:name",
+            "identifier": "schema:identifier",
             "description": "schema:description",
             "prov": "http://www.w3.org/ns/prov#",
             "generated": "prov:generated",
             "used": "prov:used",
+            "dataUsed": "prov:used",
             "modelUsed": "prov:used",
             "simUsed": "prov:used",
+            "scriptUsed": "prov:used",
             "configUsed": "prov:used",
             "startedAtTime": "prov:startedAtTime",
             "endedAtTime": "prov:endedAtTime",
@@ -542,46 +545,45 @@ class SimulationActivity(KGObject):
     fields = (
         Field("name", basestring, "name"),
         Field("description", basestring, "description"),
-        Field("model_instance", (ModelInstance, MEModel), "modelUsed", multiple=True),
-        Field("simulation_script", "brainsimulation.SimulationScript", "simUsed", multiple=True),
-        Field("configuration_used", "brainsimulation.SimulationConfiguration", "configUsed", multiple=True),
-        Field("timestamp", datetime,  "startedAtTime", required=True),
+        Field("identifier", basestring, "identifier"),
+        Field("model_instance", (ModelInstance, MEModel), "modelUsed"),
+        # Field("input_data", KGObject, "dataUsed", multiple=True), # A KIND OF INPUT DATA OBJECT, TO BE ADDED
+        Field("script", "brainsimulation.SimulationScript", "scriptUsed", multiple=True),
+        Field("config", "brainsimulation.SimulationConfiguration", "configUsed", multiple=True),
+        Field("timestamp", datetime,  "startedAtTime"),
         Field("result", "brainsimulation.SimulationResult", "generated", multiple=True),
         Field("started_by", Person, "wasAssociatedWith"),
         Field("end_timestamp",  datetime, "endedAtTime")
     )
     
 
-
 class SimulationConfiguration(KGObject):
     """
     """
     namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/simulationconfiguration/v0.1.0"
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationConfiguration"]
-    _path = "/simulation/simulationconfiguration/v0.0.2"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
     fields = (
         Field("name", basestring, "name", required=True),
+        Field("identifier", basestring, "identifier"),
         Field("description", basestring, "description"),
-        Field("config_file", (Distribution, basestring), "distribution"),
-        Field("json_description", basestring, "json_description") 
+        Field("config_file", (Distribution, basestring), "distribution")
     )
 
     def __init__(self,
                  name,
                  config_file='',
                  description='',
-                 json_description='',
                  id=None, instance=None):
         
         super(SimulationConfiguration, self).__init__(
             name=name,
             config_file=config_file,
             description=description,
-            json_description=json_description,
             id=id,
             instance=instance)
         self._file_to_upload = None
@@ -613,9 +615,10 @@ class SimulationResult(KGObject):
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:SimulationResult"]
-    _path = "/simulation/simulationresult/v0.0.4"
+    _path = "/simulation/simulationresult/v0.1.0"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
+               "identifier": "schema:identifier",
                "description": "schema:description",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
                "variable": "nsg:variable",
@@ -628,13 +631,13 @@ class SimulationResult(KGObject):
                "startedAtTime": "prov:startedAtTime",
                "wasGeneratedBy": "prov:wasGeneratedBy"}
     fields = (Field("name", basestring, "name", required=True),
-              Field("variable", basestring, "variable"),
-              Field("target", basestring, "target"),
-              Field("report_file", (Distribution, basestring), "distribution"),
-              Field("generated_by", (ModelInstance, basestring), "wasGeneratedBy"),
-              Field("data_type", basestring, "dataType"),
               Field("description", basestring, "description"),
-              Field("parameters", basestring, "parameters"),
+              Field("identifier", basestring, "identifier"),
+              Field("report_file", (Distribution, basestring), "distribution"),
+              Field("generated_by", SimulationActivity, "wasGeneratedBy"),
+              Field("derived_from", KGObject, "wasDerivedFrom", multiple=True),  # SHOULD BE SET UP  BY THE ACTIVITY
+              Field("target", basestring, "target"),
+              Field("data_type", basestring, "dataType"),
               Field("timestamp", datetime,  "startedAtTime"),
               Field("brain_region", BrainRegion, "brainRegion"),
               Field("species", Species, "species"),
@@ -642,26 +645,28 @@ class SimulationResult(KGObject):
 
     def __init__(self,
                  name,
-                 generated_by='',
+                 identifier=None,
                  report_file=None,
+                 generated_by=None,
+                 derived_from=None,
                  data_type = '',
                  variable='',
                  target='',
                  description='',
                  timestamp=None,
                  brain_region=None, species=None, celltype=None,
-                 parameters=None,
                  id=None, instance=None):
         
         super(SimulationResult, self).__init__(
             name=name,
-            generated_by=generated_by,
+            identifier=identifier,
             report_file=report_file,
+            generated_by=generated_by,
+            derived_from=derived_from,
             data_type=data_type,
             variable=variable,
             target=target,
             description=description,
-            parameters=parameters,
             timestamp=timestamp,
             brain_region=brain_region,
             species=species,
@@ -704,14 +709,15 @@ class SimulationResult(KGObject):
         for rf in as_list(self.report_file):
             rf.download(local_directory, client)
 
-class AnalysisScript(KGObject):
+class SimulationScript(KGObject):
     """
     """
     namespace = DEFAULT_NAMESPACE
-    type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisScript"]
-    _path = "/simulation/analysisscript/v0.1.0"
+    type = ["prov:Entity", "nsg:Entity", "nsg:SimulationScript"]
+    _path = "/simulation/simulationscript/v0.1.0"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
+               "identifier": "schema:identifier",
                "description": "schema:description",
                "license": "schema:license",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
@@ -719,10 +725,10 @@ class AnalysisScript(KGObject):
                "code_format": "nsg:code_format"}
     fields = (
         Field("name", basestring, "name", required=True),
-        Field("script_file", (Distribution, basestring), "distribution"),
+        Field("identifier", basestring, "identifier"),
+        Field("script_file", (Distribution, basestring), "distribution", multiple=True),
         Field("code_format", basestring, "code_format", multiple=True),
-        Field("license", basestring, "license"),
-        Field("distribution", Distribution,  "distribution")
+        Field("license", basestring, "license")
     )
 
     def __init__(self, name,
@@ -731,7 +737,7 @@ class AnalysisScript(KGObject):
                  license=None,
                  id=None,
                  instance=None):
-        super(AnalysisScript, self).__init__(name=name,
+        super(SimulationScript, self).__init__(name=name,
                                              script_file=script_file,
                                              code_format=code_format,
                                              license=license,
@@ -751,7 +757,7 @@ class AnalysisScript(KGObject):
             print('/!\ Need to provide a "script_file" argument, either a string path to a file (local or public on the web) or a Distribution object')
 
     def save(self, client):
-        super(AnalysisScript, self).save(client)
+        super(SimulationScript, self).save(client)
         if self._file_to_upload:
             self.upload_attachment(self._file_to_upload, client)
             
@@ -770,42 +776,6 @@ class AnalysisScript(KGObject):
         for rf in as_list(self.script_file):
             rf.download(local_directory, client)
 
-
-class ValidationScript(KGObject):  # or ValidationImplementation
-    """docstring"""
-    namespace = DEFAULT_NAMESPACE
-    _path = "/simulation/validationscript/v0.1.0"
-    type = ["prov:Entity", "nsg:ModelValidationScript"]
-    context = [
-        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
-        "{{base}}/contexts/nexus/core/resource/v0.3.0",
-        {
-            "name": "schema:name",
-            "description": "schema:description",
-            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
-            "prov": "http://www.w3.org/ns/prov#",
-            "schema": "http://schema.org/",
-            "dateCreated": "schema:dateCreated",
-            "repository": "schema:codeRepository",
-            "version": "schema:version",
-            "parameters": "nsg:parameters",
-            "path": "nsg:path",
-            "implements": "nsg:implements",
-            "oldUUID": "nsg:providerId"
-        }
-    ]
-    fields = (
-        Field("name", basestring, "name", required=True),
-        Field("date_created", (date, datetime), "dateCreated", required=True),
-        Field("repository", IRI, "repository"),
-        Field("version", basestring, "version"),
-        Field("description", basestring, "description"),
-        Field("parameters", basestring, "parameters"),
-        Field("test_definition", ValidationTestDefinition, "implements"),
-        Field("old_uuid", basestring, "oldUUID")
-    )
-            
-            
 def list_kg_classes():
     """List all KG classes defined in this module"""
     return [obj for name, obj in inspect.getmembers(sys.modules[__name__])

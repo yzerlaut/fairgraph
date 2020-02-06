@@ -67,8 +67,8 @@ class AnalysisActivity(KGObject):
         Field("description", basestring, "description"),
         Field("identifier", basestring, "identifier"),
         Field("input_data", KGObject, "dataUsed", multiple=True),
-        Field("analysis_script", "analysis.AnalysisScript", "scriptUsed", multiple=True),
-        Field("configuration_used", "analysis.AnalysisConfiguration", "configUsed", multiple=True),
+        Field("script", "analysis.AnalysisScript", "scriptUsed", multiple=True),
+        Field("config", "analysis.AnalysisConfiguration", "configUsed", multiple=True),
         Field("timestamp", datetime,  "startedAtTime"),
         Field("end_timestamp",  datetime, "endedAtTime"),
         Field("result", "analysis.AnalysisResult", "generated", multiple=True),
@@ -85,11 +85,13 @@ class AnalysisConfiguration(KGObject):
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
                "description": "schema:description",
+               "identifier": "schema:identifier",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
                "distribution": "nsg:distribution"}
     fields = (
         Field("name", basestring, "name", required=True),
         Field("description", basestring, "description"),
+        Field("identifier", basestring, "identifier"),
         Field("config_file", (Distribution, basestring), "distribution")
     )
 
@@ -139,8 +141,8 @@ class AnalysisResult(KGObject):
     _path = "/simulation/analysisresult/v0.1.2"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
-               "description": "schema:description",
                "identifier": "schema:identifier",
+               "description": "schema:description",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
                "variable": "nsg:variable",
                "dataType": "nsg:dataType",
@@ -237,6 +239,7 @@ class AnalysisScript(KGObject):
     _path = "/simulation/analysisscript/v0.1.0"
     context = {"schema": "http://schema.org/",
                "name": "schema:name",
+               "identifier": "schema:identifier",
                "description": "schema:description",
                "license": "schema:license",
                "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
@@ -244,10 +247,10 @@ class AnalysisScript(KGObject):
                "code_format": "nsg:code_format"}
     fields = (
         Field("name", basestring, "name", required=True),
-        Field("script_file", (Distribution, basestring), "distribution"),
+        Field("identifier", basestring, "identifier"),
+        Field("script_file", (Distribution, basestring), "distribution", multiple=True),
         Field("code_format", basestring, "code_format", multiple=True),
-        Field("license", basestring, "license"),
-        Field("distribution", Distribution,  "distribution")
+        Field("license", basestring, "license")
     )
 
     def __init__(self, name,
