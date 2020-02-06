@@ -36,51 +36,7 @@ Age = core.Age
 
 
 class AnalysisActivity(KGObject):
-    """  Here this is the Analysis *Activity*
-    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.4"
-    ],
-    "shapes": [
-        {
-            "@id": "this:AnalysisActivityShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/activity/v0.1.1/ActivityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of activity analysis",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Analysis activity shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:AnalysisActivity"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisactivity/v0.1.0"
-    }
-}
+    """
     """
     namespace = DEFAULT_NAMESPACE
     _path = "/simulation/analysisactivity/v0.1.0"
@@ -118,79 +74,10 @@ class AnalysisActivity(KGObject):
         Field("result", "analysis.AnalysisResult", "generated", multiple=True),
         Field("started_by", Person, "wasAssociatedWith")
     )
-
-    # def __init__(self, name,
-    #              description='',
-    #              identifier='',
-    #              input_data=None,
-    #              analysis_script=None,
-    #              configuration_used=None,
-    #              timestamp=None,
-    #              result=None,
-    #              end_timestamp=None,
-    #              started_by=None,
-    #              id=None, instance=None):
-        
-    #     super(AnalysisActivity, self).__init__(
-    #         name=name,
-    #         description=description,
-    #         identifier=identifier,
-    #         input_data=input_data,
-    #         analysis_script=analysis_script,
-    #         configuration_used=configuration_used,
-    #         timestamp=timestamp,
-    #         end_timestamp=end_timestamp,
-    #         started_by=started_by,
-    #         id=id,
-    #         instance=instance)
-
     
 
 class AnalysisConfiguration(KGObject):
     """
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:AnalysisConfigurationShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of config",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Analysis Configuration shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:AnalysisConfiguration"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisconfiguration/v0.1.0"
-    }
-}
     """
     namespace = DEFAULT_NAMESPACE
     _path = "/simulation/analysisconfiguration/v0.1.0"
@@ -246,50 +133,6 @@ class AnalysisConfiguration(KGObject):
 
 class AnalysisResult(KGObject):
     """
-    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:AnalysisResultShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of the analysis result",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Analysis Result shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:AnalysisResult"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisresult/v0.1.2"
-    }
-}
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisResult"]
@@ -388,50 +231,6 @@ class AnalysisResult(KGObject):
             
 class AnalysisScript(KGObject):
     """
-    Schema (use the environment setting in Postman to replace {{base}} with the desired nexus endpoint) :
-{
-    "@context": [
-        "{{base}}/contexts/neurosciencegraph/core/schema/v0.1.0",
-        {
-            "this": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0/shapes/"
-        },
-        "{{base}}/contexts/nexus/core/resource/v0.3.0"
-    ],
-    "@id": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0",
-    "@type": "nxv:Schema",
-    "imports": [
-        "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0"
-    ],
-    "shapes": [
-        {
-            "@id": "this:AnalysisScriptShape",
-            "@type": "sh:NodeShape",
-            "and": [
-                {
-                    "node": "{{base}}/schemas/neurosciencegraph/commons/entity/v0.1.0/shapes/EntityShape"
-                },
-                {
-                    "property": [
-                        {
-                            "datatype": "xsd:string",
-                            "description": "name of the analysis script",
-                            "minCount": 1,
-                            "name": "name",
-                            "path": "schema:name"
-                        }
-                    ]
-                }
-            ],
-            "label": "Analysis Script shape",
-            "nodekind": "sh:BlankNodeOrIRI",
-            "targetClass": "nsg:AnalysisScript"
-        }
-    ],
-    "links": {
-        "@context": "{{base}}/contexts/nexus/core/links/v0.2.0",
-        "self": "{{base}}/schemas/modelvalidation/simulation/analysisscript/v0.1.0"
-    }
-}
     """
     namespace = DEFAULT_NAMESPACE
     type = ["prov:Entity", "nsg:Entity", "nsg:AnalysisScript"]
