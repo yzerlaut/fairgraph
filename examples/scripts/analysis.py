@@ -6,7 +6,6 @@ from fairgraph.analysis import AnalysisActivity, AnalysisScript, AnalysisConfigu
 # needs to have HBP_AUTH_TOKEN set as a bash variable
 client = KGClient(os.environ["HBP_AUTH_TOKEN"])
 
-
 if sys.argv[-1]=='Fetch':
 
     analysis = AnalysisActivity.by_name('parameter configuration of toy analysis in demo notebook', client)
@@ -32,12 +31,12 @@ elif sys.argv[-1]=='Fetch-Pipeline':
         while Provenance_loop_continues:
 
             GENERATING_ENTITIES_BY_LAYER.append([])
-            print(GENERATING_ENTITIES_BY_LAYER)
+            # print(GENERATING_ENTITIES_BY_LAYER)
             for entity in GENERATING_ENTITIES_BY_LAYER[-2]:
                 print(entity.derived_from.resolve(client))
                 if entity is not None:
                     Entity = entity.derived_from.resolve(client)
-                    print(Entity)
+                    # print(Entity)
             Provenance_loop_continues = False
             #     if Entity is not None:
             #         GENERATING_ENTITIES_BY_LAYER += base.as_list(entity.derived_from).derived_from.resolve(client)
@@ -46,30 +45,32 @@ elif sys.argv[-1]=='Fetch-Pipeline':
         return GENERATING_ENTITIES_BY_LAYER
     
     GENERATING_ENTITIES_BY_LAYER = provenance_tracking_of_result(result)
-
-    
+    for entities in GENERATING_ENTITIES_BY_LAYER:
+        for entity in base.as_list(entities):
+            print(entity.name)
                                   
 elif sys.argv[-1]=='Pipeline':
     ## --> agent
     yann = Person(family_name='Zerlaut', given_name='Yann', email='yann.zerlaut@cnrs.fr')
     yann.save(client)
-    data = uniminds.Dataset.list(client, size=20)[0]
-    PREVIOUS_DATA = None
-    for i in range(3):
+    analysis_result = AnalysisResult.by_name('Result 0', client)
+    print(analysis_result)
+    PREVIOUS_DATA = [analysis_result]
+    for i in range(1, 4):
         analysis_script = AnalysisScript(name='Script %i' % i, code_format='python', license='CC BY-SA', script_file='analysis.py')
         analysis_config = AnalysisConfiguration(name='parameter configuration %i' % i, config_file='config_file.json')
-        analysis_result = AnalysisResult(name='Result %i' % i, report_file='empty_data.dat', data_type = 'empty data', variable='Null')
+        analysis_result = AnalysisResult(name='Result %i' % i, report_file='empty_data.dat',
+                                         derived_from = PREVIOUS_DATA,
+                                         data_type = 'empty data', variable='Null')
         analysis = AnalysisActivity(name='Analysis %i' % i, description='',
-                                    input_data= PREVIOUS_DATA,
+                                    # input_data=PREVIOUS_DATA,
                                     configuration_used=analysis_config,
                                     analysis_script=analysis_script,
                                     timestamp=datetime.now(),
-                                    result = analysis_result,
                                     started_by = yann)
-        # PREVIOUS_DATA.append(analysis_result)
+        PREVIOUS_DATA.append(analysis_result)
         for obj in [analysis_script, analysis_config, analysis_result, analysis]:
             obj.save(client) # need to save after the activity is built to have the procedure executed (setting provenance of results)
-        PREVIOUS_DATA = analysis_result
 
 else:
     # we write an entry

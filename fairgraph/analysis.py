@@ -119,7 +119,6 @@ class AnalysisActivity(KGObject):
         Field("started_by", Person, "wasAssociatedWith")
     )
 
-
     # def __init__(self, name,
     #              description='',
     #              identifier='',
@@ -314,7 +313,7 @@ class AnalysisResult(KGObject):
               Field("variable", basestring, "variable", multiple=True),
               Field("data_type", basestring, "dataType", multiple=True),
               Field("generated_by", AnalysisActivity, "wasGeneratedBy", multiple=True), # SHOULD BE SET UP  BY THE ACTIVITY
-              Field("derived_from", KGObject, "wasDerivedFrom", multiple=True), # SHOULD BE SET UP BY THE ACTIVITY
+              Field("derived_from", KGObject, "wasDerivedFrom", multiple=True), # SHOULD BE SET UP BY THE ACTIVITY (NOT YET)
               Field("timestamp", datetime,  "startedAtTime"))
 
     def __init__(self,
@@ -498,26 +497,6 @@ class AnalysisScript(KGObject):
             rf.download(local_directory, client)
 
 
-########################################################################
-### ------ end of class definitions -------------------------------- ###
-########################################################################
-
-
-def provenance_tracking_of_result(analysis_result,
-                                  with_activities=True):
-
-    Provenance_loop_continues = True
-    GENERATING_ENTITIES_BY_LAYER = [analysis_result]
-    # while Provenance_loop_continues:
-
-    #     if with_activities:
-
-    #     else:
-    #         GENERATING_ENTITIES_BY_LAYER.append([])
-    #         for quant in GENERATING_ENTITIES_BY_LAYER[-1]:
-    #             GENERATING_ENTITIES_BY_LAYER += as_list(quant.derived_from)
-            
-        
 def list_kg_classes():
     """List all KG classes defined in this module"""
     return [obj for name, obj in inspect.getmembers(sys.modules[__name__])
