@@ -107,16 +107,6 @@ else:
     analysis_config = AnalysisConfiguration(name='parameter configuration of toy analysis in demo notebook',
                                             config_file='config_file.json')
 
-    ## --> result
-
-    # for small files, we can store them directly on the knowledge graph
-    name = 'spike results of toy analysis#%s in demo notebook'  % str(datetime.now)
-    analysis_result = AnalysisResult(name=name, identifier=hashlib.sha1("{}".format(name).encode('utf-8')).hexdigest(),
-                                     report_file='spike_long_run.npz',
-                                     data_type = 'network activity data', 
-                                     variable='spike',
-                                     description='Spiking results of toy analysis#%s run in demo notebook'  % str(datetime.now))
-
     ## --> agentb
     yann = Person(family_name='Zerlaut',
                   given_name='Yann',
@@ -132,15 +122,29 @@ else:
                                 configuration_used=analysis_config,
                                 analysis_script=analysis_script,
                                 timestamp=datetime.now(),
-                                result = analysis_result,
+                                # result = analysis_result, # DOESN'T WORK
                                 started_by = yann,
                                 end_timestamp=datetime.now())
 
-    # analysis_result.generated_by = [analysis]
-    # # analysis_result.add_provenance_from_activity(analysis, client)
-    # print(analysis_result.generated_by)
-    
+    # for small files, we can store them directly on the knowledge graph
+    name = 'spike results of toy analysis#%s in demo notebook'  % str(datetime.now)
+    analysis_result = AnalysisResult(name=name, identifier=hashlib.sha1("{}".format(name).encode('utf-8')).hexdigest(),
+                                     # generated_by=analysis,
+                                     derived_from = data,
+                                     report_file='spike_long_run.npz',
+                                     data_type = 'network activity data', 
+                                     variable='spike',
+                                     description='Spiking results of toy analysis#%s run in demo notebook'  % str(datetime.now))
+
+    ## --> result
     for obj in [analysis_script, analysis_config, analysis_result, analysis]:
         obj.save(client) # need to save after the activity is built to have the procedure executed (setting provenance of results)
         print('The KG ID is:', obj.id)
+
+
+    # YOU CAN ADD PROVENANCE ONFO ONLY AFTER HAVING SAVED THE INSTANCES FIRST
+    analysis.result = analysis_result
+    # analysis_result.generated_by = analysis # DOESN'T WORK
+    #
+    analysis.save(client)
 
