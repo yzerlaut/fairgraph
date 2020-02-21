@@ -3,6 +3,21 @@
 
 """
 
+# Copyright 2018-2019 CNRS
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import collections
 try:
     basestring
@@ -48,7 +63,9 @@ class Address(StructuredMetadata):
 
 
 class Species(OntologyTerm):
-    """docstring"""
+    """
+    The species of an experimental subject, expressed with the binomial nomenclature.
+    """
     iri_map = {
         "Rodentia": "http://purl.obolibrary.org/obo/NCBITaxon_9989",
         "Mus musculus": "http://purl.obolibrary.org/obo/NCBITaxon_10090",
@@ -63,12 +80,15 @@ class Species(OntologyTerm):
 
 
 class Strain(OntologyTerm):
-    """docstring"""
+    """
+    An inbred sub-population within a species.
+    """
     iri_map = {
         "Tg2576": "http://www.hbp.FIXME.org/hbp_strain_ontology/12345670",
         "C57BL/6": "http://www.hbp.FIXME.org/hbp_strain_ontology/12345671",
         "C57BL/6J X SJL": "http://www.hbp.FIXME.org/hbp_strain_ontology/12345672",
-        "C57BL/6J": "https://www.jax.org/strain/000664",  # RRID:IMSR_JAX:000664
+        "C57BL/6J": "https://www.jax.org/strain/000664",
+        "B6.129-Nlgn3<tm4Sud>/J": "https://www.jax.org/strain/023398",
         #"Sprague-Dawley": "https://rgd.mcw.edu/rgdweb/report/strain/main.html?id=70508",
         "Sprague-Dawley": "https://rgd.mcw.edu/rgdweb/ontology/view.html?acc_id=RS:0000681",
         #"Wistar":  "https://rgd.mcw.edu/rgdweb/report/strain/main.html?id=13508588",
@@ -82,7 +102,9 @@ class Strain(OntologyTerm):
 
 
 class Sex(OntologyTerm):
-    """docstring"""
+    """
+    The sex of an animal or person from whom/which data were obtained.
+    """
     iri_map = {
         "male": "schema:Male",
         "female": "schema:Female"
@@ -90,7 +112,9 @@ class Sex(OntologyTerm):
 
 
 class BrainRegion(OntologyTerm):
-    """docstring"""
+    """
+    A sub-structure or region with the brain.
+    """
     iri_map = {
         "hippocampus CA1": "http://purl.obolibrary.org/obo/UBERON_0003881",
         "hippocampus": "http://purl.obolibrary.org/obo/UBERON_0001954",  # Ammon's horn
@@ -121,7 +145,7 @@ class BrainRegion(OntologyTerm):
 
 
 class CellType(OntologyTerm):
-    """docstring"""
+    """A type of neuron or glial cell."""
     iri_map = {
         "hippocampus CA1 pyramidal cell": "http://uri.neuinfo.org/nif/nifstd/sao830368389",
         "hippocampus CA1 basket cell": "http://uri.neuinfo.org/nif/nifstd/nlx_cell_091205",
@@ -154,7 +178,9 @@ class CellType(OntologyTerm):
 
 
 class AbstractionLevel(OntologyTerm):
-    """docstring"""
+    """
+    Level of abstraction for a neuroscience model, e.g.rate neurons, spiking neurons
+    """
     iri_map = {
         "protein structure": "http://www.hbp.FIXME.org/hbp_modelling_ontology/12345670",
         "systems biology": "http://www.ebi.ac.uk/sbo/main/display?sboId=SBO:0000062",
@@ -214,11 +240,11 @@ class AbstractionLevel(OntologyTerm):
 class ModelScope(OntologyTerm):
     """docstring"""
     iri_map = {
-        "subcellular": "TODO",
+        "subcellular": "http://www.hbp.FIXME.org/hbp_modelling_ontology/12345675",
         "subcellular: spine": "http://uri.neuinfo.org/nif/nifstd/sao1145756102",
         "subcellular: ion channel": "http://uri.neuinfo.org/nif/nifstd/nifext_2508",
         "subcellular: signalling": "http://uri.interlex.org/base/ilx_0503639",  # "biochemical processes", not ideal
-        "subcellular: molecular": "TODO",
+        "subcellular: molecular": "http://www.hbp.FIXME.org/hbp_modelling_ontology/12345676",
         "single cell": "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000008",
         "network": "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000010",
         "network: microcircuit":  "http://purl.obolibrary.org/obo/UBERON_0014778",  # "cell group", not ideal
@@ -249,7 +275,7 @@ class QuantitativeValue(StructuredMetadata):
         "months": "http://purl.obolibrary.org/obo/UO_0000035",
         "degrees": "http://purl.obolibrary.org/obo/UO_0000185",
         "µm": "http://purl.obolibrary.org/obo/UO_0000017",
-        "mV":  "http://purl.obolibrary.org/obo/UO_0000247",
+        "mV": "http://purl.obolibrary.org/obo/UO_0000247",
         "ms": "http://purl.obolibrary.org/obo/UO_0000028",
         "MΩ": "https://en.wiktionary.org/wiki/megaohm",
         "Mohm": "https://en.wiktionary.org/wiki/megaohm",
@@ -267,8 +293,6 @@ class QuantitativeValue(StructuredMetadata):
         self.unit_code = unit_code or self.unit_codes[unit_text]
 
     def __repr__(self):
-        #return (f'{self.__class__.__name__}('
-        #        f'{self.value!r} {self.unit_text!r})')
         return ('{self.__class__.__name__}('
                 '{self.value!r} {self.unit_text!r})'.format(self=self))
 
@@ -298,6 +322,9 @@ class QuantitativeValue(StructuredMetadata):
     def from_jsonld(cls, data):
         if data is None:
             return None
+        for key in list(data):
+            if "http://schema.org/" in key:
+                data[key.replace("http://schema.org/", "")] = data[key]
         if "label" in data:
             unit_text = data["label"]
         elif "unitText" in data:
@@ -323,7 +350,7 @@ class QuantitativeValueRange(StructuredMetadata):
         "months": "http://purl.obolibrary.org/obo/UO_0000035",
         "degrees": "http://purl.obolibrary.org/obo/UO_0000185",
         "µm": "http://purl.obolibrary.org/obo/UO_0000017",
-        "mV":  "http://purl.obolibrary.org/obo/UO_0000247",
+        "mV": "http://purl.obolibrary.org/obo/UO_0000247",
         "ms": "http://purl.obolibrary.org/obo/UO_0000028",
     }
 
@@ -338,8 +365,6 @@ class QuantitativeValueRange(StructuredMetadata):
         self.unit_code = unit_code or self.unit_codes[unit_text]
 
     def __repr__(self):
-        #return (f'{self.__class__.__name__}('
-        #        f'{self.value!r} {self.unit_text!r})')
         return ('{self.__class__.__name__}('
                 '{self.min!r}-{self.max!r} {self.unit_text!r})'.format(self=self))
 
@@ -363,6 +388,9 @@ class QuantitativeValueRange(StructuredMetadata):
     def from_jsonld(cls, data):
         if data is None:
             return None
+        for key in list(data):
+            if "http://schema.org/" in key:
+                data[key.replace("http://schema.org/", "")] = data[key]
         if "label" in data:
             unit_text = data["label"]
         elif "unitText" in data:
@@ -387,7 +415,7 @@ class Age(StructuredMetadata):
     }
     fields = (
         Field("value", basestring, "value", required=True),
-        Field("period", KGObject, "period",  required=True, multiple=True)
+        Field("period", basestring, "period", required=True, multiple=True)
     )
 
     def __init__(self, value, period):
@@ -397,13 +425,13 @@ class Age(StructuredMetadata):
         self.period = period
 
     def __repr__(self):
-        #return (f'{self.__class__.__name__}('
-        #        f'{self.value!r}, {self.period!r})')
         return ('{self.__class__.__name__}('
                 '{self.value!r}, {self.period!r})'.format(self=self))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.value == other.value and self.period == other.period
+        return (isinstance(other, self.__class__)
+                and self.value == other.value
+                and self.period == other.period)
 
     def __ne__(self, other):
         return not self.__eq__(other)

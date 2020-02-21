@@ -16,15 +16,22 @@ import pytest
 
 
 test_data_lookup.update({
+    "/v0/data/neuralactivity/core/collection/v0.1.0/": "test/test_data/nexus/core/collection_list_0_10.json",
+    "/v0/data/neuralactivity/core/identifier/v0.1.0/": "test/test_data/nexus/core/identifier_list_0_10.json",
+    "/v0/data/neuralactivity/core/organization/v0.1.0/": "test/test_data/nexus/core/organization_list_0_10.json",
     "/v0/data/neuralactivity/core/person/v0.1.0/": "test/test_data/nexus/core/person_list_0_10.json",
+    "/v0/data/neuralactivity/core/protocol/v0.1.0/": "test/test_data/nexus/core/protocol_list_0_10.json",
+    "/v0/data/neuralactivity/core/subject/v0.1.2/": "test/test_data/nexus/core/subject_list_0_10.json",
 })
 
 
 class TestSubject(BaseTestKG):
     class_under_test = Subject
 
-    #def test_list(self, kg_client):
-    #    pass
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
     def test_round_trip(self, kg_client):
         obj1 = Subject(name="Mickey", species=Species("Mus musculus"),
@@ -42,8 +49,10 @@ class TestSubject(BaseTestKG):
 class TestOrganization(BaseTestKG):
     class_under_test = Organization
 
-    def test_list(self, kg_client):
-        pass
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
     def test_round_trip(self, kg_client):
         obj1 = Organization(name="NeuroPSI",
@@ -78,16 +87,17 @@ class TestOrganization(BaseTestKG):
 class TestPerson(BaseTestKG):
     class_under_test = Person
 
-    def test_list(self, kg_client):
-        people = Person.list(kg_client, size=10)
-        assert len(people) == 10
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
     def test_list_with_filter(self, kg_client):
-        people = Person.list(kg_client, family_name="da Vinci", size=10)
+        people = Person.list(kg_client, api="nexus", family_name="da Vinci", size=10)
         assert isinstance(people, Person)
-        people = Person.list(kg_client, given_name="Katherine", size=10)
+        people = Person.list(kg_client, api="nexus", given_name="Katherine", size=10)
         assert isinstance(people, Person)
-        people = Person.list(kg_client, given_name="Horatio", size=10)
+        people = Person.list(kg_client, api="nexus", given_name="Horatio", size=10)
         assert len(people) == 0
 
     def test_round_trip(self, kg_client):
@@ -104,13 +114,33 @@ class TestPerson(BaseTestKG):
         p1 = Person("Hamilton", "Margaret", "margaret.hamilton@nasa.gov",
                     KGProxy(Organization, "http://fake_uuid_855fead8"),
                     id="http://fake_uuid_8ab3dc739b")
-        assert p1.exists(kg_client)
+        assert p1.exists(kg_client, api="nexus")
         p2 = Person("James", "Bond", "fictional@example.com")
-        p2_exists = p2.exists(kg_client)
+        p2_exists = p2.exists(kg_client, api="nexus")
         assert not p2_exists
         p3_noid = Person("Johnson", "Katherine", "katherine.johnson@nasa.gov")
-        p3_exists = p3_noid.exists(kg_client)
+        p3_exists = p3_noid.exists(kg_client, api="nexus")
         assert p3_exists
+
+    def test_existence_query(self):
+        obj = Person("Johnson", "Katherine")
+        expected = {
+            "op": "and",
+            "value": [
+                {
+                    "path": "schema:familyName",
+                    "op": "eq",
+                    "value": "Johnson"
+                },
+                {
+                    "path": "schema:givenName",
+                    "op": "eq",
+                    "value": "Katherine"
+                }
+            ]
+        }
+        generated = obj._build_existence_query(api="nexus")
+        assert expected == generated
 
     def test_get_context(self, kg_client):
         p1 = Person("Hamilton", "Margaret", "margaret.hamilton@nasa.gov",
@@ -133,9 +163,9 @@ class TestPerson(BaseTestKG):
 
     def test_from_uuid_invalid_uuid(self, kg_client):
         with pytest.raises(ValueError):
-            Person.from_uuid("02be7e84-af91-4481-a7c1-1ec204eaeab", kg_client)
+            Person.from_uuid("02be7e84-af91-4481-a7c1-1ec204eaeab", kg_client, api="nexus")
 
     def test_save_new(self, kg_client, monkeypatch):
         new_p = Person("Ride", "Sally", "sally.ride@nasa.gov")
-        monkeypatch.setattr(Person, "exists", lambda self, kg_client: False)
+        monkeypatch.setattr(Person, "exists", lambda self, kg_client, api='any': False)
         new_p.save(kg_client)

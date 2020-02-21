@@ -18,6 +18,7 @@
             "fieldname": "name",
             "relative_path": "http://schema.org/name",
             "sort": true,
+            "required": true,
             "filter": {
                 "op": "contains",
                 "parameter": "name"
@@ -57,6 +58,14 @@
             "filter": {
                 "op": "contains",
                 "parameter": "parameters"
+            }
+        },
+        {
+            "fieldname": "path",
+            "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/path",
+            "filter": {
+                "op": "contains",
+                "parameter": "test_class"
             }
         },
         {
@@ -202,6 +211,7 @@
                 {
                     "fieldname": "ValidationTestDefinition__referenceData",
                     "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/referenceData",
+                    "ensure_order": true,
                     "fields": [
                         {
                             "relative_path": "@id"

@@ -1,10 +1,38 @@
-import sys, inspect, os
+"""
+"Minimal Information for Neuroscience DataSets" - metadata common to all neuroscience
+datasets independent of the type of investigation
+
+"""
+
+# Copyright 2018-2019 CNRS
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import sys
+import inspect
+import os
 from datetime import datetime
 try:
     basestring
 except NameError:
     basestring = str
     raw_input = input
+try:
+    from urllib.parse import urlparse, quote_plus, parse_qs, urlencode
+except ImportError:  # Python 2
+    from urlparse import urlparse, parse_qs
+    from urllib import quote_plus, urlencode
 
 import requests
 from tqdm import tqdm
@@ -17,10 +45,7 @@ from fairgraph.utility import in_notebook
 
 class MINDSObject(KGObject):
     """
-    ...
-
-    N.B. all MINDS objects have the same "fg" query ID, because the query url includes the namepsace/version/class path,
-    e.g. for the Activity class, the url is : https://kg.humanbrainproject.org/query/minds/core/activity/v1.0.0/fg
+    Base class for MINDS metadata
     """
     namespace = "minds"
     context = [
@@ -38,7 +63,8 @@ class MINDSObject(KGObject):
 
 class Person(MINDSObject):
     """
-    docstring
+    A person associated with research data or models, for example as an experimentalist,
+    or a data analyst.
     """
     _path = "/core/person/v1.0.0"
     type = ["minds:Person"]
@@ -51,7 +77,7 @@ class Person(MINDSObject):
 
 class Activity(MINDSObject):
     """
-    docstring
+    A research activity.
     """
     _path = "/core/activity/v1.0.0"
     type = ["minds:Activity"]
@@ -99,7 +125,7 @@ class SpecimenGroup(MINDSObject):
 
 class AgeCategory(MINDSObject):
     """
-    docstring
+    An age category, e.g. "adult", "juvenile"
     """
     _path = "/core/agecategory/v1.0.0"
     type = ["minds:Agecategory"]
@@ -113,7 +139,7 @@ class AgeCategory(MINDSObject):
 
 class EthicsApproval(MINDSObject):
     """
-    docstring
+    Record of an  ethics approval.
     """
     _path = "/ethics/approval/v1.0.0"
     type = ["minds:Approval"]
@@ -127,7 +153,7 @@ class EthicsApproval(MINDSObject):
 
 class EthicsAuthority(MINDSObject):
     """
-    docstring
+    A entity legally authorised to approve or deny permission to conduct an experiment on ethical grounds.
     """
     _path = "/ethics/authority/v1.0.0"
     type = ["minds:Authority"]
@@ -191,12 +217,10 @@ correction of the given article if it is discovered post-publication.
 
 class Dataset(MINDSObject):
     """
-    docstring
+    A collection of related data files.
     """
     _path = "/core/dataset/v1.0.0"
     type = ["minds:Dataset"]
-    query_id = "fgDataset"
-    query_id_resolved = "fgResolvedModified"
     accepted_terms_of_use = False
     fields = (
       Field("activity", Activity, "https://schema.hbp.eu/minds/activity", required=False, multiple=True),
@@ -209,7 +233,7 @@ class Dataset(MINDSObject):
       Field("description", basestring, "http://schema.org/description", required=False, multiple=False),
       Field("external_datalink", basestring, "https://schema.hbp.eu/minds/external_datalink", required=False, multiple=False),
       Field("identifier", basestring, "http://schema.org/identifier", required=False, multiple=True),
-      Field("name", basestring, "http://schema.org/name", required=False, multiple=False),
+      Field("name", basestring, "http://schema.org/name", required=True, multiple=False),
       #Field("associated_with", Person, "http://www.w3.org/ns/prov#qualifiedAssociation", required=False, multiple=False),
       Field("release_date", datetime, "https://schema.hbp.eu/minds/release_date", required=False, multiple=False, strict=False),
       Field("component", "minds.PLAComponent", "https://schema.hbp.eu/minds/component", required=False, multiple=True),
@@ -242,21 +266,33 @@ class Dataset(MINDSObject):
                 self.__class__.accepted_terms_of_use = True
             else:
                 raise Exception("Please accept the terms of use before downloading the dataset")
-        response = requests.get(self.container_url + "?format=json")
-        if response.status_code != 200:
+
+        parts = urlparse(self.container_url)
+        query_dict = parse_qs(parts.query)
+        query_dict['format'] = "json"
+        url = parts._replace(query=urlencode(query_dict, True)).geturl()
+        response = requests.get(url)
+        if response.status_code not in (200, 204):
             raise IOError(
                 "Unable to download dataset. Response code {}".format(response.status_code))
         contents = response.json()
         total_data_size = sum(item["bytes"] for item in contents) // 1024
         progress_bar = tqdm(total=total_data_size)
-        for entry in contents:
+        for entry in sorted(contents,
+                            key=lambda entry: entry["content_type"] != "application/directory"):
+            # take directories first
             local_path = os.path.join(local_directory, entry["name"])
+<<<<<<< HEAD
             print(local_path)
             if entry["name"].endswith("/"):
+=======
+            #if entry["name"].endswith("/"):
+            if entry["content_type"] == "application/directory":
+>>>>>>> 68669cf77d1b4846eaf059f545584ef3d1d69500
                 os.makedirs(local_path, exist_ok=True)
             else:
                 response2 = requests.get(self.container_url + "/" + entry["name"])
-                if response2.status_code == 200:
+                if response2.status_code in (200, 204):
                     with open(local_path, "wb") as fp:
                         fp.write(response2.content)
                     progress_bar.update(entry["bytes"] // 1024)
@@ -266,10 +302,18 @@ class Dataset(MINDSObject):
                             local_path, response2.status_code))
         progress_bar.close()
 
+    def methods(self, client, api="query", scope="released"):
+        """Return a list of experimental methods associated with the dataset"""
+        filter = {
+            "dataset": self.id
+        }
+        instances = client.query_kgquery(Method.path, "fgDatasets", filter=filter, scope=scope)
+        return [Method.from_kg_instance(inst, client) for inst in instances]
+
 
 class EmbargoStatus(MINDSObject):
     """
-    docstring
+    Information about the embargo period during which a given dataset cannot be publicly shared.
     """
     _path = "/core/embargostatus/v1.0.0"
     type = ["minds:Embargostatus"]
@@ -280,9 +324,10 @@ class EmbargoStatus(MINDSObject):
       #Field("associated_with", Person, "http://www.w3.org/ns/prov#qualifiedAssociation", required=False, multiple=False))
     )
 
+
 class File(MINDSObject):
     """
-    docstring
+    Metadata about a single file.
     """
     _path = "/core/file/v0.0.4"
     type = ["minds:File"]
@@ -299,7 +344,7 @@ class File(MINDSObject):
 
 class FileAssociation(MINDSObject):
     """
-    docstring
+    A link between a file and a dataset.
     """
     _path = "/core/fileassociation/v1.0.0"
     type = ["minds:Fileassociation"]
@@ -312,7 +357,7 @@ class FileAssociation(MINDSObject):
 
 class Format(MINDSObject):
     """
-    docstring
+    A file/data format.
     """
     _path = "/core/format/v1.0.0"
     type = ["minds:Format"]
@@ -326,7 +371,7 @@ class Format(MINDSObject):
 
 class License(MINDSObject):
     """
-    docstring
+    A license governing sharing of a dataset.
     """
     _path = "/core/licensetype/v1.0.0"
     type = ["minds:Licensetype"]
@@ -340,9 +385,10 @@ class License(MINDSObject):
 
 class Method(MINDSObject):
     """
-    docstring
+    An experimental method.
     """
-    _path = "/core/method/v1.0.0"
+    _path = "/experiment/method/v1.0.0"
+    # also see "/core/method/v1.0.0"
     type = ["minds:Method"]
     fields = (
       # Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
@@ -354,7 +400,7 @@ class Method(MINDSObject):
 
 class Modality(MINDSObject):
     """
-    docstring
+    A recording modality.
     """
     _path = "/core/modality/v1.0.0"
     type = ["minds:Modality"]
@@ -366,7 +412,7 @@ class Modality(MINDSObject):
 
 class ParcellationAtlas(MINDSObject):
     """
-    docstring
+    A brain atlas in which the brain of a given species of animal is divided into regions.
     """
     _path = "/core/parcellationatlas/v1.0.0"
     type = ["minds:Parcellationatlas"]
@@ -380,7 +426,7 @@ class ParcellationAtlas(MINDSObject):
 
 class ParcellationRegion(MINDSObject):
     """
-    docstring
+    A brain region as defined by a brain atlas.
     """
     _path = "/core/parcellationregion/v1.0.0"
     type = ["minds:Parcellationregion"]
@@ -396,7 +442,7 @@ class ParcellationRegion(MINDSObject):
 
 class PLAComponent(MINDSObject):
     """
-    docstring
+    A data or software component, as defined in the HBP "project lifecycle" application.
     """
     _path = "/core/placomponent/v1.0.0"
     type = ["minds:Placomponent"]
@@ -411,7 +457,7 @@ class PLAComponent(MINDSObject):
 
 class Preparation(MINDSObject):
     """
-    docstring
+    An experimental preparation.
     """
     _path = "/core/preparation/v1.0.0"
     type = ["minds:Preparation"]
@@ -425,7 +471,7 @@ class Preparation(MINDSObject):
 
 class Protocol(MINDSObject):
     """
-    docstring
+    An experimental procotol.
     """
     _path = "/experiment/protocol/v1.0.0"
     type = ["minds:Protocol"]
@@ -439,7 +485,7 @@ class Protocol(MINDSObject):
 
 class Publication(MINDSObject):
     """
-    docstring
+    A scientific publication.
     """
     _path = "/core/publication/v1.0.0"
     type = ["minds:Publication"]
@@ -455,7 +501,7 @@ class Publication(MINDSObject):
 
 class ReferenceSpace(MINDSObject):
     """
-    docstring
+    A reference space for a brain atlas.
     """
     _path = "/core/referencespace/v1.0.0"
     type = ["minds:Referencespace"]
@@ -469,7 +515,7 @@ class ReferenceSpace(MINDSObject):
 
 class Role(MINDSObject):
     """
-    docstring
+    The role of a person within an experiment.
     """
     _path = "/prov/role/v1.0.0"
     type = ["minds:Role"]
@@ -479,10 +525,10 @@ class Role(MINDSObject):
 
 class Sample(MINDSObject):
     """
-    docstring
+    A sample of neural tissue.
     """
     _path = "/experiment/sample/v1.0.0"
-    type = ["minds:Sample"]
+    type = "https://schema.hbp.eu/minds/Sample"
     fields = (
       # Field("alternatives", KGObject, "https://schema.hbp.eu/inference/alternatives", required=False, multiple=True),
       Field("container_url", basestring, "https://schema.hbp.eu/minds/container_url", required=False, multiple=False),
@@ -501,7 +547,7 @@ class Sample(MINDSObject):
 
 class Sex(MINDSObject):
     """
-    docstring
+    The sex of an animal or person from whom/which data were obtained.
     """
     _path = "/core/sex/v1.0.0"
     type = ["minds:Sex"]
@@ -513,7 +559,7 @@ class Sex(MINDSObject):
 
 class SoftwareAgent(MINDSObject):
     """
-    docstring
+    Software that performed a given activity.
     """
     _path = "/core/softwareagent/v1.0.0"
     type = ["minds:Softwareagent"]
@@ -526,7 +572,7 @@ class SoftwareAgent(MINDSObject):
 
 class Species(MINDSObject):
     """
-    docstring
+    The species of an experimental subject, expressed with the binomial nomenclature.
     """
     _path = "/core/species/v1.0.0"
     type = ["minds:Species"]
@@ -541,7 +587,7 @@ class Species(MINDSObject):
 
 class SpecimenGroup(MINDSObject):
     """
-    docstring
+    A group of experimental subjects.
     """
     _path = "/core/specimengroup/v1.0.0"
     type = ["minds:Specimengroup"]
@@ -555,7 +601,7 @@ class SpecimenGroup(MINDSObject):
 
 class Subject(MINDSObject):
     """
-    docstring
+    The organism that is the subject of an experimental investigation.
     """
     _path = "/experiment/subject/v1.0.0"
     type = ["minds:Subject"]

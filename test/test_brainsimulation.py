@@ -4,6 +4,7 @@ Tests of fairgraph.brainsimulation module, using a mock Http client
 which returns data loaded from the files in the test_data directory.
 """
 
+from datetime import datetime
 from pyxus.resources.entity import Instance
 
 from fairgraph.base import KGQuery, KGProxy, as_list, Distribution, KGObject
@@ -12,7 +13,7 @@ from fairgraph.brainsimulation import (
     ModelScript, ModelProject, ModelInstance, MEModel, Morphology, EModel, AnalysisResult,
     ValidationTestDefinition, ValidationScript, ValidationResult, ValidationActivity
 )
-from fairgraph.core import use_namespace as use_core_namespace
+from fairgraph.core import Person, use_namespace as use_core_namespace
 
 from .utils import (kg_client, MockKGObject, test_data_lookup, generate_random_object,
                     BaseTestKG, random_uuid)
@@ -21,8 +22,21 @@ use_core_namespace("modelvalidation")
 
 
 test_data_lookup.update({
+    "/v0/data/modelvalidation/simulation/analysisresult/v1.0.0/": "test/test_data/nexus/brainsimulation/analysisresult_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/emodel/v0.1.1/": "test/test_data/nexus/brainsimulation/emodel_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/memodel/v0.1.2/": "test/test_data/nexus/brainsimulation/memodel_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/modelinstance/v0.1.1/": "test/test_data/nexus/brainsimulation/modelinstance_list_0_10.json",
     "/v0/data/modelvalidation/simulation/modelproject/v0.1.0/": "test/test_data/nexus/brainsimulation/modelproject_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/emodelscript/v0.1.0/": "test/test_data/nexus/brainsimulation/modelscript_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/morphology/v0.1.1/": "test/test_data/nexus/brainsimulation/morphology_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/modelvalidation/v0.2.0/": "test/test_data/nexus/brainsimulation/validationactivity_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/validationresult/v0.1.0/": "test/test_data/nexus/brainsimulation/validationresult_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/validationscript/v0.1.0/": "test/test_data/nexus/brainsimulation/validationscript_list_0_10.json",
+    "/v0/data/modelvalidation/simulation/validationtestdefinition/v0.1.0/": "test/test_data/nexus/brainsimulation/validationtestdefinition_list_0_10.json",
     "/query/modelvalidation/simulation/modelproject/v0.1.0/fgResolved/instances": "test/test_data/kgquery/brainsimulation/modelproject_list_resolved_0_10.json",
+    "/query/modelvalidation/simulation/modelproject/v0.1.0/fgSimple/instances": "test/test_data/kgquery/brainsimulation/modelproject_list_simple_0_10.json",
+
+    "/query/neuralactivity/core/person/v0.1.0/fgSimple/instances": "test/test_data/kgquery/core/person_list_simple_0_10.json",
 })
 
 
@@ -47,33 +61,82 @@ class TestModelScript(BaseTestKG):
 class TestModelProject(BaseTestKG):
     class_under_test = ModelProject
 
-    def test_list(self, kg_client):
-        models = ModelProject.list(kg_client, size=10)
-        assert len(models) == 10
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
     def test_list_kgquery(self, kg_client):
-        models = ModelProject.list(kg_client, api="query", scope="inferred", size=10, resolved=True)
+        models = ModelProject.list(kg_client, api="query", scope="latest", size=10, resolved=True)
         assert len(models) == 10
 
-    def test_list_with_filter(self, kg_client):
-        models = ModelProject.list(kg_client, size=10, species="Rattus norvegicus")
-        assert len(models) == 5
+    def test_list_nexus_with_filter(self, kg_client):
+        models = ModelProject.list(kg_client, api="nexus", size=10, species="Rattus norvegicus")
+        assert len(models) == 6
 
     def test_list_kgquery_with_filter(self, kg_client):
-        models = ModelProject.list(kg_client, api="query", scope="inferred", size=10, resolved=True, species="Rattus norvegicus")
+        models = ModelProject.list(kg_client, api="query", scope="latest", size=10, resolved=True, species="Rattus norvegicus")
         assert len(models) == 2
+
+    def test_count_nexus(self, kg_client):
+        count = ModelProject.count(kg_client, api='nexus')
+        assert count == 351
+
+    def test_count_kgquery(self, kg_client):
+        count = ModelProject.count(kg_client, api='query')
+        assert count == 351
+
+    def test_existence_query(self, kg_client):
+        obj = ModelProject(name="foo",
+                           owners=Person("Holmes", "Sherlock"),
+                           authors=Person("Holmes", "Sherlock"),
+                           description="",
+                           private=True,
+                           date_created=datetime(2000, 1, 1))
+        expected = {
+            "op": "and",
+            "value": [
+                {
+                    "path": "schema:name",
+                    "op": "eq",
+                    "value": "foo"
+                },
+                {
+                    "path": "schema:dateCreated",
+                    "op": "eq",
+                    "value": "2000-01-01T00:00:00"
+                }
+            ]
+        }
+        generated = obj._build_existence_query(api="nexus")
+        assert expected == generated
 
 
 class TestModelInstance(BaseTestKG):
     class_under_test = ModelInstance
 
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
 
 class TestMEModel(BaseTestKG):
     class_under_test = MEModel
 
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
 
 class TestMorphology(BaseTestKG):
     class_under_test = Morphology
+
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
     def test_round_trip_with_morphology_file(self, kg_client):
         cls = self.class_under_test
@@ -98,22 +161,72 @@ class TestMorphology(BaseTestKG):
 class TestEModel(BaseTestKG):
     class_under_test = EModel
 
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
 
 class TestAnalysisResult(BaseTestKG):
     class_under_test = AnalysisResult
+
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
+    def test_existence_query(self, kg_client):
+        obj = AnalysisResult("foo", timestamp=datetime(2000, 1, 1))
+        expected = {
+            "op": "and",
+            "value": [
+                {
+                    "path": "schema:name",
+                    "op": "eq",
+                    "value": "foo"
+                },
+                {
+                    "path": "prov:generatedAtTime",
+                    "op": "eq",
+                    "value": "2000-01-01T00:00:00"
+                }
+            ]
+        }
+        generated = obj._build_existence_query(api="nexus")
+        assert expected == generated
 
 
 class TestValidationTestDefinition(BaseTestKG):
     class_under_test = ValidationTestDefinition
 
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
 
 class TestValidationScript(BaseTestKG):
     class_under_test = ValidationScript
+
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
 
 
 class TestValidationResult(BaseTestKG):
     class_under_test = ValidationResult
 
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)
+
 
 class TestValidationActivity(BaseTestKG):
     class_under_test = ValidationActivity
+
+    def test_list_nexus(self, kg_client):
+        cls = self.class_under_test
+        objects = cls.list(kg_client, api="nexus", size=10)
+        assert len(objects) == 10, len(objects)

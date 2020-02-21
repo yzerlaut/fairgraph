@@ -403,6 +403,10 @@
                     "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/parameters"
                 },
                 {
+                    "fieldname": "path",
+                    "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/path"
+                },
+                {
                     "fieldname": "ValidationScript__implements",
                     "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/implements",
                     "fields": [
@@ -545,6 +549,7 @@
                         {
                             "fieldname": "ValidationTestDefinition__referenceData",
                             "relative_path": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/referenceData",
+                            "ensure_order": true,
                             "fields": [
                                 {
                                     "relative_path": "@id"

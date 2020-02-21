@@ -61,39 +61,54 @@ class MockHttpClient(HttpClient):
                 self.cache[test_data_path] = data
             #if "query" in parts.path:
             #        raise Exception()  # for debugging
-            if "filter" in parts.query:  # api="nexus"
-                query = parse_qs(parts.query)
-                filtr = eval(query['filter'][0])
-                if filtr.get("path") == "nsg:brainLocation / nsg:brainRegion":
-                    results = [item for item in data["results"]
-                               if as_list(item["source"]["brainLocation"]["brainRegion"])[0]["@id"] == filtr["value"]]
-                elif filtr.get("path") in ("schema:givenName", "schema:familyName"):
-                    results = [item for item in data["results"]
-                               if item["source"][filtr["path"].split(":")[1]] == filtr["value"]]
-                elif filtr.get("path") == "prov:used / rdf:type":
-                    results = [item for item in data["results"]
-                               if filtr["value"] in data["results"][0]["source"]["prov:used"]["@type"]]
-                elif filtr.get("path") == "nsg:species":
-                    results = [item for item in data["results"]
-                               if item["source"].get("species", {"@id": None})["@id"] == filtr["value"]]
-                elif "op" in filtr:
-                    # James Bond does not exist
-                    if filtr["value"][0]["value"] in ("James", "Bond"):
-                        results = []
-                    elif filtr["value"][0]["value"] in ("Katherine", "Johnson"):
+            if parts.netloc == "nexus.humanbrainproject.org":
+                if "filter" in parts.query:  # api="nexus"
+                    query = parse_qs(parts.query)
+                    filtr = eval(query['filter'][0])
+                    if filtr.get("path") == "nsg:brainLocation / nsg:brainRegion":
                         results = [item for item in data["results"]
-                                   if item["source"]["familyName"] == "Johnson"]
-                else:
-                    raise NotImplementedError("todo")
-                data = deepcopy(data)  # don't want to mess with the cache
-                data["results"] = results
-            elif "species" in parts.query:   # api="query"
-                query = parse_qs(parts.query)
-                value = query["species"][0]
-                results = [item for item in data["results"]
-                           if item.get("species", [{"@id": None}])[0]["@id"] == value]
-                data = deepcopy(data)  # don't want to mess with the cache
-                data["results"] = results
+                                if as_list(item["source"]["brainLocation"]["brainRegion"])[0]["@id"] == filtr["value"]]
+                    elif filtr.get("path") in ("schema:givenName", "schema:familyName"):
+                        results = [item for item in data["results"]
+                                if item["source"][filtr["path"].split(":")[1]] == filtr["value"]]
+                    elif filtr.get("path") == "prov:used / rdf:type":
+                        results = [item for item in data["results"]
+                                if filtr["value"] in data["results"][0]["source"]["prov:used"]["@type"]]
+                    elif filtr.get("path") == "nsg:species":
+                        results = [item for item in data["results"]
+                                if item["source"].get("species", {"@id": None})["@id"] == filtr["value"]]
+                    elif "op" in filtr:
+                        if filtr["op"] == "eq" and filtr["path"] == "schema:name":
+                            results = [item for item in data["results"]
+                                    if item["source"]["name"] == filtr["value"]]
+                        # James Bond does not exist
+                        elif filtr["value"][0]["value"] in ("James", "Bond"):
+                            results = []
+                        elif filtr["value"][0]["value"] in ("Katherine", "Johnson"):
+                            results = [item for item in data["results"]
+                                    if item["source"]["familyName"] == "Johnson"]
+                    else:
+                        raise NotImplementedError("todo")
+                    data = deepcopy(data)  # don't want to mess with the cache
+                    data["results"] = results
+            elif parts.netloc == "kg.humanbrainproject.org":
+                if "species" in parts.query:   # api="query"
+                    query = parse_qs(parts.query)
+                    if "species" in query:
+                        value = query["species"][0]
+                        results = [item for item in data["results"]
+                                if item.get("species", [{"@id": None}])[0]["@id"] == value]
+                        data = deepcopy(data)
+                        data["results"] = results
+                elif "id" in parts.query:
+                    query = parse_qs(parts.query)
+                    value = query["id"][0]
+                    results = [item for item in data["results"]
+                            if item["@id"] == value]
+                    data = deepcopy(data)
+                    data["results"] = results
+            else:
+                raise NotImplementedError
             return data
         elif method_name == 'post':
             # assume success, generate random uuid
@@ -109,7 +124,8 @@ class MockHttpClient(HttpClient):
 
 class MockNexusClient(NexusClient):
 
-    def __init__(self, scheme=None, host=None, prefix=None, alternative_namespace=None, auth_client=None):
+    def __init__(self, scheme=None, host=None, prefix=None,
+                 alternative_namespace=None, auth_client=None):
         self.version = None
         self.namespace = alternative_namespace if alternative_namespace is not None else "{}://{}".format(scheme, host)
         self.env = None
@@ -143,8 +159,8 @@ lli = len(lorem_ipsum)
 
 
 def _random_text():
-    start = random.randint(0, lli//2)
-    end = random.randint(lli//2, lli)
+    start = random.randint(0, lli // 2)
+    end = random.randint(lli // 2, lli)
     return lorem_ipsum[start:end]
 
 
@@ -175,7 +191,7 @@ def generate_random_object(cls, all_fields=True):
             elif obj_type == QuantitativeValue:
                 # todo: subclass QV so we can specify the required dimensionality in `fields`
                 value = QuantitativeValue(random.uniform(-10, 10),
-                                        random.choice(list(QuantitativeValue.unit_codes)))
+                                          random.choice(list(QuantitativeValue.unit_codes)))
             elif issubclass(obj_type, OntologyTerm):
                 value = obj_type(random.choice(list(obj_type.iri_map)))
             elif obj_type == datetime:
@@ -263,14 +279,15 @@ class BaseTestKG(object):
         cls = self.class_under_test
         generated = cls.generate_query("fgResolved", kg_client, resolved=True)
         #key = "{}_{}_resolved_query".format(cls.__module__.split(".")[1], cls.__name__.lower())
-        test_data = "test/test_data/kgquery/{}/{}_resolved_query.json".format(cls.__module__.split(".")[1], cls.__name__.lower())
+        test_data = "test/test_data/kgquery/{}/{}_resolved_query.json".format(
+            cls.__module__.split(".")[1], cls.__name__.lower())
         with open(test_data) as fp:
             expected = json.load(fp)
-        assert not jsondiff(generated, expected)
+        assert not jsondiff(generated, expected), jsondiff(generated, expected)
 
-        generated = cls.generate_query("fg", kg_client, resolved=False)
+        generated = cls.generate_query("fgSimple", kg_client, resolved=False)
         #key = "{}_{}_simple_query".format(cls.__module__.split(".")[1], cls.__name__.lower())
         test_data = test_data.replace("resolved", "simple")
         with open(test_data) as fp:
             expected = json.load(fp)
-        assert not jsondiff(generated, expected)
+        assert not jsondiff(generated, expected), jsondiff(generated, expected)
