@@ -26,6 +26,7 @@ mimetypes.init()
 
 DEFAULT_NAMESPACE = "modelvalidation"
 
+
 ATTACHMENT_SIZE_LIMIT = 1024 * 1024  # 1 MB
 
 
