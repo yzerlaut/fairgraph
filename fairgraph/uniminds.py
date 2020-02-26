@@ -430,7 +430,7 @@ class ModelInstance(UnimindsObject):
       Field("cellular_target", CellularTarget, "https://schema.hbp.eu/uniminds/cellularTarget", required=False, multiple=True),
       Field("contributor", Person, "https://schema.hbp.eu/uniminds/contributor", required=False, multiple=True),
       Field("custodian", Person, "https://schema.hbp.eu/uniminds/custodian", required=False, multiple=False),
-      Field("main_contact", Person, "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
+      Field("main_contact", (Person, list), "https://schema.hbp.eu/uniminds/mainContact", required=False, multiple=False),
       Field("modelformat", ModelFormat, "https://schema.hbp.eu/uniminds/modelFormat", required=False, multiple=True),
       Field("modelscope", "uniminds.ModelScope", "https://schema.hbp.eu/uniminds/modelScope", required=False, multiple=False),
       Field("publication", "uniminds.Publication", "https://schema.hbp.eu/uniminds/publication", required=False, multiple=False),
