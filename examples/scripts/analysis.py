@@ -10,7 +10,9 @@ client = KGClient()
 ###############################################
 ### Downloading the dataset metadata ##########
 ###############################################
-data = uniminds.Dataset.list(client, api='nexus', resolve=True, scope='released', size=1)[0]
+#data = uniminds.Dataset.by_name('Set of intracellular recordings for fairgraph-demo', client, api='query', scope='latest') # not working
+data = uniminds.Dataset.list(client, api='nexus', resolve=True, scope='released', size=1)[0] # so picking an existing one
+
 
 # The model source code is available in a public container at CSCS
 container_url = 'https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/simulation_result_demo'
