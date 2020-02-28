@@ -44,6 +44,29 @@ DEFAULT_NAMESPACE = "modelvalidation"
 
 ATTACHMENT_SIZE_LIMIT = 1024 * 1024  # 1 MB
 
+# An upload function used by all entity classes -> to be moved in "utils" 
+def upload_attachment(cls, file_path, client):
+    assert os.path.isfile(file_path)
+    statinfo = os.stat(file_path)
+    if statinfo.st_size > ATTACHMENT_SIZE_LIMIT:
+        raise Exception("File is too large to store directly in the KnowledgeGraph, please upload it to a Swift container")
+    # todo, use the Nexus HTTP client directly for the following
+    headers = client._nexus_client._http_client.auth_client.get_headers()
+    content_type, encoding = mimetypes.guess_type(file_path, strict=False)
+    response = requests.put("{}/attachment?rev={}".format(cls.id, cls.rev or 1),
+                            headers=headers,
+                            files={
+                                "file": (os.path.basename(file_path),
+                                         open(file_path, "rb"),
+                                         content_type)
+                            })
+    if response.status_code < 300:
+        logger.info("Added attachment {} to {}".format(file_path, cls.id))
+        cls._file_to_upload = None
+        cls.report_file = Distribution.from_jsonld(response.json()["distribution"][0])
+    else:
+        raise Exception(str(response.content))
+
 
 class HasAliasMixin(object):
 
@@ -717,6 +740,269 @@ class ValidationActivity(KGObject):
         return obj
 
 
+class SimulationActivity(KGObject):
+    """
+    """
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/simulationactivity/v0.1.0"
+    type = ["prov:Activity", "nsg:SimulationActivity"]
+    context = [
+        "{{base}}/contexts/neurosciencegraph/core/data/v0.3.1",
+        "{{base}}/contexts/nexus/core/resource/v0.3.0",
+        {
+            "schema": "http://schema.org/",
+            "name": "schema:name",
+            "identifier": "schema:identifier",
+            "description": "schema:description",
+            "prov": "http://www.w3.org/ns/prov#",
+            "generated": "prov:generated",
+            "used": "prov:used",
+            "dataUsed": "prov:used",
+            "modelUsed": "prov:used",
+            "simUsed": "prov:used",
+            "scriptUsed": "prov:used",
+            "configUsed": "prov:used",
+            "startedAtTime": "prov:startedAtTime",
+            "endedAtTime": "prov:endedAtTime",
+            "wasAssociatedWith": "prov:wasAssociatedWith",
+            "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+            "referenceData": "nsg:referenceData"
+        }
+    ]
+    fields = (
+        Field("name", basestring, "name"),
+        Field("description", basestring, "description"),
+        Field("identifier", basestring, "identifier"),
+        Field("model_instance", (ModelInstance, MEModel), "modelUsed"),
+        # Field("input_data", KGObject, "dataUsed", multiple=True), # A KIND OF INPUT DATA OBJECT, TO BE ADDED
+        Field("script", "brainsimulation.SimulationScript", "scriptUsed", multiple=True),
+        Field("config", "brainsimulation.SimulationConfiguration", "configUsed", multiple=True),
+        Field("timestamp", datetime,  "startedAtTime"),
+        Field("result", "brainsimulation.SimulationResult", "generated", multiple=True),
+        Field("started_by", Person, "wasAssociatedWith"),
+        Field("end_timestamp",  datetime, "endedAtTime")
+    )
+    
+
+class SimulationConfiguration(KGObject):
+    """
+    """
+    namespace = DEFAULT_NAMESPACE
+    _path = "/simulation/simulationconfiguration/v0.1.0"
+    type = ["prov:Entity", "nsg:Entity", "nsg:SimulationConfiguration"]
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "description": "schema:description",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("identifier", basestring, "identifier"),
+        Field("description", basestring, "description"),
+        Field("config_file", (Distribution, basestring), "distribution")
+    )
+
+    def __init__(self,
+                 name,
+                 config_file='',
+                 description='',
+                 id=None, instance=None):
+        
+        super(SimulationConfiguration, self).__init__(
+            name=name,
+            config_file=config_file,
+            description=description,
+            id=id,
+            instance=instance)
+        self._file_to_upload = None
+        if isinstance(config_file, basestring):
+            if config_file.startswith("http"):
+                self.config_file = Distribution(location=config_file)
+            elif os.path.isfile(config_file):
+                self._file_to_upload = config_file
+                self.config_file = None
+        elif config_file is not None:
+            for rf in as_list(self.config_file):
+                assert isinstance(rf, Distribution)
+
+    def save(self, client):
+        super(SimulationConfiguration, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
+    def download(self, local_directory, client):
+        for rf in as_list(self.config_file):
+            rf.download(local_directory, client)
+    
+            
+class SimulationResult(KGObject):
+    """
+    """
+    namespace = DEFAULT_NAMESPACE
+    type = ["prov:Entity", "nsg:Entity", "nsg:SimulationResult"]
+    _path = "/simulation/simulationresult/v0.1.0"
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "identifier": "schema:identifier",
+               "description": "schema:description",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "variable": "nsg:variable",
+               "target": "nsg:target",
+               "brainRegion": "nsg:brainRegion",
+               "species": "nsg:species",
+               "celltype": "nsg:celltype",
+               "dataType": "nsg:dataType",
+               "prov": "http://www.w3.org/ns/prov#",
+               "startedAtTime": "prov:startedAtTime",
+               "wasGeneratedBy": "prov:wasGeneratedBy"}
+    fields = (Field("name", basestring, "name", required=True),
+              Field("description", basestring, "description"),
+              Field("identifier", basestring, "identifier"),
+              Field("report_file", (Distribution, basestring), "distribution"),
+              Field("generated_by", SimulationActivity, "wasGeneratedBy"),
+              Field("derived_from", KGObject, "wasDerivedFrom", multiple=True),  # SHOULD BE SET UP  BY THE ACTIVITY
+              Field("target", basestring, "target"),
+              Field("data_type", basestring, "dataType"),
+              Field("timestamp", datetime,  "startedAtTime"),
+              Field("brain_region", BrainRegion, "brainRegion"),
+              Field("species", Species, "species"),
+              Field("celltype", CellType, "celltype"))
+
+    def __init__(self,
+                 name,
+                 identifier=None,
+                 report_file=None,
+                 generated_by=None,
+                 derived_from=None,
+                 data_type = '',
+                 variable='',
+                 target='',
+                 description='',
+                 timestamp=None,
+                 brain_region=None, species=None, celltype=None,
+                 id=None, instance=None):
+        
+        super(SimulationResult, self).__init__(
+            name=name,
+            identifier=identifier,
+            report_file=report_file,
+            generated_by=generated_by,
+            derived_from=derived_from,
+            data_type=data_type,
+            variable=variable,
+            target=target,
+            description=description,
+            timestamp=timestamp,
+            brain_region=brain_region,
+            species=species,
+            celltype=celltype,
+            id=id,
+            instance=instance)
+        self._file_to_upload = None
+        if isinstance(report_file, basestring):
+            if report_file.startswith("http"):
+                self.report_file = Distribution(location=report_file)
+            elif os.path.isfile(report_file):
+                self._file_to_upload = report_file
+                self.report_file = None
+        elif report_file is not None:
+            for rf in as_list(self.report_file):
+                assert isinstance(rf, Distribution)
+
+    @property
+    def _existence_query(self):
+        return {
+            "op": "and",
+            "value": [
+                {
+                    "path": "schema:name",
+                    "op": "eq",
+                    "value": self.name
+                }
+            ]
+        }
+
+    def save(self, client):
+        super(SimulationResult, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
+    def download(self, local_directory, client):
+        for rf in as_list(self.report_file):
+            rf.download(local_directory, client)
+
+class SimulationScript(KGObject):
+    """
+    """
+    namespace = DEFAULT_NAMESPACE
+    type = ["prov:Entity", "nsg:Entity", "nsg:SimulationScript"]
+    _path = "/simulation/simulationscript/v0.1.0"
+    context = {"schema": "http://schema.org/",
+               "name": "schema:name",
+               "identifier": "schema:identifier",
+               "description": "schema:description",
+               "license": "schema:license",
+               "nsg": "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/",
+               "distribution": "nsg:distribution",
+               "code_format": "nsg:code_format"}
+    fields = (
+        Field("name", basestring, "name", required=True),
+        Field("identifier", basestring, "identifier"),
+        Field("script_file", (Distribution, basestring), "distribution", multiple=True),
+        Field("code_format", basestring, "code_format", multiple=True),
+        Field("license", basestring, "license")
+    )
+
+    def __init__(self, name,
+                 script_file=None,
+                 code_format=None,
+                 license=None,
+                 id=None,
+                 instance=None):
+        super(SimulationScript, self).__init__(name=name,
+                                             script_file=script_file,
+                                             code_format=code_format,
+                                             license=license,
+                                             id=id,
+                                             instance=instance)
+        self._file_to_upload = None
+        if isinstance(script_file, basestring):
+            if script_file.startswith("http"):
+                self.script_file = Distribution(location=script_file)
+            elif os.path.isfile(script_file):
+                self._file_to_upload = script_file
+                self.script_file = None
+        elif script_file is not None:
+            for rf in as_list(self.script_file):
+                assert isinstance(rf, Distribution)
+        else:
+            print('/!\ Need to provide a "script_file" argument, either a string path to a file (local or public on the web) or a Distribution object')
+
+    def save(self, client):
+        super(SimulationScript, self).save(client)
+        if self._file_to_upload:
+            self.upload_attachment(self._file_to_upload, client)
+            
+    @property
+    def script_location(self):
+        if self.distribution:
+            return self.distribution.location
+        else:
+            print('script attached to the KG entry, use the "download" method to fetch it')
+            return None
+
+    def upload_attachment(self, file_path, client):
+        upload_attachment(self, file_path, client)
+        
+    def download(self, local_directory, client):
+        for rf in as_list(self.script_file):
+            rf.download(local_directory, client)
+    
 def list_kg_classes():
     """List all KG classes defined in this module"""
     return [obj for name, obj in inspect.getmembers(sys.modules[__name__])
