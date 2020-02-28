@@ -20,15 +20,24 @@ if not os.path.isfile('model_script.py'):
 ### Documenting Model Metadata ################
 ###############################################
 
-## --> building a model instance (version) from those metadata
+## --> starting with script metadata underlying the model
+model_script = brainsimulation.ModelScript(name='Script for Toy model#%s of network dynamics for demo purpose' % str(datetime.now),
+                                code_format='python',
+                                distribution=base.Distribution(container_url+'/simulation_script.py'),
+                                license='CC BY-SA')
+model_script.save(client) # SAVE IN KG
+print('The KG ID is:', model_script.id)
+
+## --> then model metadata
 my_model = brainsimulation.ModelInstance(name= 'Toy model#%s of neural network dynamics for demo purpose' % str(datetime.now),
-                                         description="""
-                                         This model#%s implements a very simple description of desynchronized 
-                                         activity in neural assemblies:
-                                         - Single neuron spiking consists of independent Poisson processes
-                                         - Vm fluctuations are sampled from a random process with Gaussian distribution
-                                         """  % str(datetime.now) ,
-                                         version='v0')
+                         description="""
+                         This model#%s implements a very simple description of desynchronized 
+                         activity in neural assemblies:
+                         - Vm fluctuations are sampled from a random process with Gaussian distribution
+                         - Single neuron spiking consists of the positive crossing events above a certain threshold 
+                         """  % str(datetime.now()),
+                         main_script=model_script,
+                        version='v0')
 
 my_model.save(client) # SAVE IN KG
 print('The KG ID is:', my_model.id)
@@ -93,19 +102,19 @@ print('The KG ID is:', Vm_result.id)
 yann = brainsimulation.Person(family_name='Zerlaut',
                               given_name='Yann',
                               email='yann.zerlaut@cnrs.fr')
-yann.save(client)
+#yann.save(client)
 print('The KG ID is:', yann.id)
 
 
 ## --> activity
 sim = brainsimulation.SimulationActivity(name='parameter configuration of toy model#%s in demo notebook'  % str(datetime.now),
                                          description='',
-                                         # configuration_used=sim_config,
-                                         # simulation_script=sc,
-                                         # model_instance=my_model,
+                                         configuration_used=sim_config,
+                                         simulation_script=sc,
+                                         model_instance=my_model,
                                          timestamp=datetime.now(),
-                                         # result = spike_result,
-                                         started_by = yann,
+                                         result = spike_result,
+                                         # started_by = yann,
                                          ended_at_time=datetime.now())
 
 sim.save(client)
